@@ -3,7 +3,7 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   try {
-    const raw = await readFile(new URL('../../../../../game/config/arena-forge-config.json', import.meta.url), 'utf8');
+    const raw = await readFile(new URL('../../../../game/config/arena-forge-config.json', import.meta.url), 'utf8');
     const config = JSON.parse(raw);
     return NextResponse.json(config, {
       headers: {
