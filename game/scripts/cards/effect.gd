@@ -6,7 +6,7 @@ var value := 0.0
 var area := 120.0
 var duration := 0.0
 var target_type := "area"
-var tile_id := "fire"
+var tile_id := ""
 
 func configure(data: Dictionary) -> void:
     kind = str(data.get("kind", kind))
