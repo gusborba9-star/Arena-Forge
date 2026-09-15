@@ -1,19 +1,15 @@
 name: Arena Forge CI
-
 on:
   push:
     branches: [main, '**']
   pull_request:
     branches: [main]
   workflow_dispatch:
-
 permissions:
   contents: read
-
 concurrency:
   group: arena-forge-ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   validate:
     runs-on: ubuntu-latest
@@ -29,7 +25,6 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
-
   godot:
     runs-on: ubuntu-latest
     timeout-minutes: 20
@@ -40,5 +35,9 @@ jobs:
         run: godot --headless --editor --path game --quit
       - name: Run engine contracts
         run: godot --headless --path game --script tests/engine_contract_runner.gd
+      - name: Run card data contracts
+        run: godot --headless --path game --script tests/card_data_contract_runner.gd
       - name: Run card runtime contracts
-        run: godot --headless --path game --script tests/x.gd
+        run: godot --headless --path game --script tests/card_runtime_contract_runner.gd
+      - name: Run card guard contracts
+        run: godot --headless --path game --script tests/card_guard_contract_runner.gd
