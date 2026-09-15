@@ -17,8 +17,7 @@ concurrency:
 jobs:
   validate:
     runs-on: ubuntu-24.04
-    timeout-minutes: 25
-    container: barichello/godot-ci:4.4.1
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -30,4 +29,11 @@ jobs:
       - run: npm run typecheck
       - run: npm run lint
       - run: npm run build
+
+  godot:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    container: barichello/godot-ci:4.4.1
+    steps:
+      - uses: actions/checkout@v4
       - run: godot --headless --path game --script tests/engine_contract_runner.gd
