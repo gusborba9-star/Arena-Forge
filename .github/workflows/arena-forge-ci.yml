@@ -1,4 +1,4 @@
-name: Arena Forge CI
+ name: Arena Forge CI
 
 on:
   push:
