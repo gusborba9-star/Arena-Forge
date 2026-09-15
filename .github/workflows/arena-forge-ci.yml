@@ -40,3 +40,5 @@ jobs:
         run: godot --headless --editor --path game --quit
       - name: Run engine contracts
         run: godot --headless --path game --script tests/engine_contract_runner.gd
+      - name: Run card runtime contracts
+        run: godot --headless --path game --script tests/x.gd
