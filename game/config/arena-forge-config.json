@@ -1,1 +1,25 @@
-{"schema_version":2,"match":{"control_end_seconds":90.0,"end_seconds":240.0,"auto_attack_interval":0.55,"enemy_attack_interval":1.2,"enemy_contact_range":42.0,"enemy_speed":90.0,"max_energy":10.0,"energy_regen_interval":1.5},"deck":{"size":8,"hand_size":4},"arena":{"cataclysm_start_seconds":180.0,"cataclysm_duration_seconds":60.0,"cataclysm_start_radius":600.0,"cataclysm_end_radius":120.0},"telegraph":{"default_warning_seconds":1.5}}
+{
+  "schema_version": 3,
+  "match": {
+    "control_end_seconds": 90.0,
+    "cataclysm_start_seconds": 180.0,
+    "end_seconds": 240.0,
+    "auto_attack_interval": 0.55,
+    "enemy_attack_interval": 1.2,
+    "enemy_contact_range": 42.0,
+    "enemy_speed": 90.0,
+    "max_energy": 10.0,
+    "energy_regen_interval": 1.5
+  },
+  "deck": {
+    "size": 8,
+    "hand_size": 4
+  },
+  "arena": {
+    "cataclysm_start_radius": 600.0,
+    "cataclysm_end_radius": 120.0
+  },
+  "telegraph": {
+    "default_warning_seconds": 1.5
+  }
+}
