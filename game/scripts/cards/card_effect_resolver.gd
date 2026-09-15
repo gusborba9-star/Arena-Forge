@@ -35,7 +35,9 @@ func resolve(card: ArenaCard, context: Dictionary) -> bool:
             "spawn":
                 context["spawn_request"] = {"kind": effect.target_type, "count": int(effect.value)}
             "slow":
-                context["slow_multiplier"] = clampf(1.0 - effect.value, 0.1, 1.0)
+                for enemy in enemies:
+                    if not enemy.dead and enemy.position.distance_to(target) <= effect.area:
+                        enemy.apply_slow(clampf(1.0 - effect.value, 0.1, 1.0), effect.duration)
     return true
 
 func _tile_from_id(id: String) -> ArenaState.Tile:
