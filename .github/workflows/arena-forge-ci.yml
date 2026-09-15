@@ -36,4 +36,7 @@ jobs:
     container: barichello/godot-ci:4.4.1
     steps:
       - uses: actions/checkout@v4
-      - run: godot --headless --path game --script tests/engine_contract_runner.gd
+      - name: Initialize Godot project registry
+        run: godot --headless --editor --path game --quit
+      - name: Run engine contracts
+        run: godot --headless --path game --script tests/engine_contract_runner.gd
