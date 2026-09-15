@@ -4,13 +4,14 @@
 CRIAR → ADAPTAR → EXCLUIR LEGADO → TESTAR → VALIDAR → CORRIGIR → TESTAR NOVAMENTE → ATUALIZAR ROADMAP → AVANÇAR.
 
 ## Estado de validação — 2026-09-15
-- O runner GitHub-hosted foi comprovado funcional por um workflow mínimo: run `35013229305` concluiu com sucesso e recebeu runner real.
-- Os runs do CI de implementação `#40`, `#41` e `#42` falharam antes do primeiro step. Essa falha de provisionamento foi posteriormente superada pelo GitHub Actions e não é mais o bloqueio atual.
-- Run `35032881405` (`#53`) foi a primeira execução real do CI após a recuperação: `validate` passou integralmente e `godot` recebeu runner, iniciou Godot 4.4.1 e executou `tests/engine_contract_runner.gd`, mas falhou porque as classes globais não estavam disponíveis no primeiro carregamento headless.
-- Auditoria estrutural confirmou que as classes de domínio existem no projeto, usam `class_name` corretamente e suas dependências principais também existem. O problema estava no bootstrap do projeto em ambiente CI limpo: o cache de classes globais do Godot (`.godot/global_script_class_cache.cfg`) não existia porque `.godot` é gerado localmente e ignorado pelo Git.
-- Correção arquitetural: o job Godot agora inicializa o projeto em modo editor headless antes de executar os contratos, permitindo que o Godot construa seu registro de classes globais de forma determinística. Não foram adicionados preloads artificiais ao runner nem mocks.
-- Run `35035279579` (`#54`) validou a correção: `validate` passou em `npm install`, `npm test`, `typecheck`, `lint` e `build`; `godot` passou por inicialização de container, checkout, registro do projeto e `tests/engine_contract_runner.gd` com sucesso.
-- Evidência final do Gate 1: execução Godot headless real concluída com sucesso no commit `0f0e5d37abd246796f385adfaf95371c70ae790e`, job Godot `104602904042`, run `35035279579`.
+- O runner GitHub-hosted foi comprovado funcional por workflow mínimo: run `35013229305` concluiu com sucesso.
+- A recuperação do runner permitiu execução real do CI; o primeiro problema Godot foi o bootstrap do registro de classes globais em checkout limpo.
+- Correção arquitetural: o job Godot inicializa o projeto em modo editor headless antes dos contratos, sem preloads artificiais nem mocks.
+- Run `35035279579` (`#54`) validou Gate 1: `validate` passou integralmente e Godot 4.4.1 executou `tests/engine_contract_runner.gd` com sucesso.
+- Para Gate 2, a auditoria confirmou que as 16 cartas são data-driven e que o runtime real é composto por `ArenaCard`, `ArenaDeck`, `CardRuntime`, `CardEffectResolver`, `EnergyPool`, `ArenaState`, `ArenaHero` e `ArenaEnemy`.
+- A primeira suíte funcional de cartas revelou uma falha de qualidade de teste: um `assert` falhava em uma carta composta, mas não produzia exit code não-zero no runner. O teste foi corrigido para falhar explicitamente com `quit(1)` e o cenário composto foi ajustado para manter o inimigo vivo quando o efeito de push também é validado.
+- Run final de Gate 2 `35037001697` (`#69`) executou no mesmo ambiente `barichello/godot-ci:4.4.1`. `validate` e `godot` concluíram com sucesso.
+- Evidência funcional final: job Godot `104608252568` executou `tests/engine_contract_runner.gd`, `tests/card_data_contract_runner.gd`, `tests/card_runtime_contract_runner.gd` e `tests/card_guard_contract_runner.gd`, todos concluídos com sucesso. Os logs registraram `ARENA_FORGE_CARD_DATA_OK cards=16`, `ARENA_FORGE_CARD_RUNTIME_OK cards=16` e `ARENA_FORGE_CARD_GUARDS_OK invalid=2 cooldown=5`.
 
 ## Gate 0 — Fundação
 - [x] Blueprint
@@ -48,7 +49,16 @@ CRIAR → ADAPTAR → EXCLUIR LEGADO → TESTAR → VALIDAR → CORRIGIR → TES
 - [x] Cooldown
 - [x] Upgrades
 - [x] 16 cartas iniciais
-- [ ] Validação funcional Godot de todas as cartas
+- [x] Validação funcional Godot de todas as cartas — run `35037001697`, job `104608252568`, commit `9560621689583b0ccc5ebf630560eb289d372cfb`
+
+### Evidência do Gate 2
+- `card_data_contract_runner.gd`: 16 IDs, custos, criação das cartas, catálogo, deck 8, mão 4 e draw/play.
+- `card_runtime_contract_runner.gd`: execução real das 16 cartas via `CardRuntime.play` + `CardEffectResolver`, com mutação real de dano, cura, push, tiles de arena, speed, spawn e slow, além de consumo de energia e rotação da mão.
+- `card_guard_contract_runner.gd`: uso inválido por índice/energia e cooldown real do Blink.
+- Ambiente: Godot `4.4.1.stable.official.49a5bc7b6`, container `barichello/godot-ci:4.4.1`.
+- Workflow: inicialização headless do registro de classes antes da execução dos contratos.
+- `validate`: PASS — npm install, test, typecheck, lint e build.
+- `godot`: PASS — todos os quatro runners concluídos com sucesso.
 
 ## Gate 3 — Vertical Slice Arena 1
 - [x] Identidade Arena 1
