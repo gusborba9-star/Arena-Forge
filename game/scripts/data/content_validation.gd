@@ -2,6 +2,7 @@ class_name ContentValidation
 extends RefCounted
 
 const EFFECT_KINDS := ["damage", "heal", "push", "speed", "tile", "destroy", "spawn", "slow"]
+const TILE_IDS := ["normal", "water", "ice", "fire", "oil", "electricity", "electric", "hazard"]
 
 static func validate() -> Dictionary:
     var heroes := HeroDefinitions.initial()
@@ -28,6 +29,9 @@ static func validate() -> Dictionary:
             var kind := str(effect.get("kind", ""))
             valid = valid and kind in EFFECT_KINDS
             valid = valid and float(effect.get("value", 0.0)) >= 0.0 and float(effect.get("area", 0.0)) >= 0.0 and float(effect.get("duration", 0.0)) >= 0.0
+            if kind == "tile":
+                var tile_id := str(effect.get("tile_id", "")).to_lower()
+                valid = valid and tile_id in TILE_IDS and tile_id != "normal"
 
     for arena in arenas:
         var arena_id := str(arena.get("id", ""))
