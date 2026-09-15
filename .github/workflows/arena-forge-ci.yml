@@ -1,0 +1,22 @@
+name: Arena Forge CI
+on:
+  push:
+    branches: [main, '**']
+  pull_request:
+    branches: [main]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: {node-version: 22, cache: npm}
+      - run: npm install
+      - run: npm test
+      - run: npm run typecheck
+  godot:
+    runs-on: ubuntu-latest
+    container: barichello/godot-ci:4.4.1
+    steps:
+      - uses: actions/checkout@v4
+      - run: godot --headless --path game --script scripts/tests/engine_contract_runner.gd

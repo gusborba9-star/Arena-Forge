@@ -1,0 +1,8 @@
+node_modules/
+.next/
+.env
+.env.local
+.godot/
+*.import
+export/
+.DS_Store
