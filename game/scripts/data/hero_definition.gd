@@ -23,7 +23,8 @@ static func from_dict(value: Dictionary) -> HeroDefinition:
     result.armor = maxf(0.0, float(value.get("armor", 0.0)))
     result.attack_range = maxf(0.0, float(value.get("attack_range", 0.0)))
     result.ability_id = str(value.get("ability_id", ""))
-    result.tags = Array(value.get("tags", []), TYPE_STRING, "", null)
+    for tag in value.get("tags", []):
+        result.tags.append(str(tag))
     result.mastery_id = str(value.get("mastery_id", result.id + "_mastery"))
     result.specialization_id = str(value.get("specialization_id", result.id + "_specialization"))
     return result
