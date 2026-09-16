@@ -3,7 +3,7 @@ extends RefCounted
 
 static func reward_schema() -> Dictionary:
     return {
-        "types": ["card", "fragment", "resource", "cosmetic", "choice"],
+        "types": ["card", "fragment", "resource", "cosmetic", "emote", "badge", "effect", "animation", "choice"],
         "choice_policy": {"enabled": true, "min_options": 2, "max_options": 5},
         "source_types": ["match", "chest", "forge", "event", "mastery", "season"]
     }
