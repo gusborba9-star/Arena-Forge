@@ -26,7 +26,7 @@ func configure(arena_definition: Dictionary, control_end := 90.0, cataclysm_star
     arena = ArenaState.new()
     telegraph = Telegraph.new()
     hero = ArenaHero.new()
-    hero.position = Vector2(0.0, 0.0)
+    hero.position = Vector2.ZERO
     enemies.clear()
     pending_event.clear()
     kills = 0
@@ -70,24 +70,28 @@ func _resolve_event() -> void:
     var resolved := director.resolve_pending_event()
     _event_count += 1
     var point := Vector2i((_event_count * 3) % arena.width, (_event_count * 2) % arena.height)
-    if str(resolved.get("mutation", "")) == "destroy_tile":
+    var mutation := str(resolved.get("mutation", ""))
+    if mutation == "destroy_tile" or str(resolved.get("type", "")) == "destruction":
         arena.destroy_tile(point.x, point.y)
     else:
-        arena.add_hazard(str(resolved.get("mutation", "fire_hazard")), 1.0, 2.0)
+        arena.add_hazard(mutation if mutation != "" else "fire_hazard", 1.0, float(resolved.get("duration_seconds", 2.0)))
         arena.set_tile(point.x, point.y, ArenaState.Tile.FIRE)
     pending_event.clear()
     telegraph = Telegraph.new()
     event_resolved.emit(resolved.duplicate(true))
 
 func _apply_cataclysm_pressure() -> void:
-    var center := Vector2.ZERO
+    if hero.dead:
+        return
     for enemy in enemies:
         if enemy.dead:
             continue
-        if enemy.position.distance_to(center) > director.cataclysm_radius:
-            var killed := combat.resolve_hero_hit(hero, 1.0, Vector2.ZERO, 0.0)
-            if killed:
-                break
+        if not is_inside_cataclysm(hero.position):
+            combat.resolve_hero_hit(hero, 1.0, Vector2.ZERO, 0.0)
+            break
+
+func is_inside_cataclysm(position: Vector2) -> bool:
+    return position.distance_to(Vector2.ZERO) <= director.cataclysm_radius
 
 func _finish() -> void:
     rewards = MatchRewards.calculate(state.elapsed, kills, progression.level, not hero.dead)
