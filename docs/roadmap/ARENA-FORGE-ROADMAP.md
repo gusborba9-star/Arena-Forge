@@ -5,13 +5,19 @@ CRIAR → ADAPTAR → EXCLUIR LEGADO → TESTAR → VALIDAR → CORRIGIR → TES
 
 CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado concluído quando houver implementação real, teste comportamental, validação e regressão compatível com o requisito.
 
-## Estado de validação — 2026-09-15
-- Run `35013229305` comprovou o runner GitHub-hosted funcional.
-- Run `35035279579` (`#54`) comprovou o bootstrap de classes Godot e validou o conjunto de contratos do core existente.
-- Run `35037001697` (`#69`) e a execução final posterior comprovaram os contratos funcionais das 16 cartas no ambiente Godot 4.4.1.
-- Auditoria de dependências registrada em `docs/audit/PRODUCT-DEPENDENCY-AUDIT.md`, baseline `f57fc16487f425cebe8f53c7c5812f22ea90de77`.
-- A auditoria reabriu itens de Gate 1 e Gate 3 que estavam marcados `[x]` sem cobertura comportamental específica suficiente. Isso não significa que o código deixou de existir; significa que a evidência não sustenta o status de conclusão sob o protocolo atual.
-- A ordem de execução passa a ser determinada por dependências arquiteturais, não pela numeração dos Gates.
+## Estado de validação — 2026-09-16
+- `16-card validated runtime scope` permanece preservado como baseline técnico.
+- O **Launch Product Target** foi formalizado: 25+ cards, 8+ heroes, 15 arenas, coleção/progressão/mastery/Forge/rewards/eventos/competição/analytics/live ops preparados por contratos.
+- A fundação data-driven foi ampliada sem implementar prematuramente meta/monetização/competitive completos.
+- Novos runners foram adicionados para Content Foundation, A1 Runtime e bootstrap smoke. A validação CI desses novos contratos é requisito para fechar A1.
+- A ordem de execução continua sendo determinada por dependências arquiteturais, não pela numeração dos Gates.
+
+## Estados usados
+- **VALIDATED** — implementação + teste comportamental + CI/regressão comprovados.
+- **IMPLEMENTED** — implementação presente, evidência ainda incompleta.
+- **PLANNED** — contrato/decisão registrada, implementação futura.
+- **BLOCKED** — depende de outro estágio.
+- **NOT STARTED** — não implementado.
 
 ## Gate 0 — Fundação
 - [x] Blueprint
@@ -21,27 +27,26 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 - [x] Contratos data-driven
 - [x] Matriz de migração Hórus → Arena Forge
 - [x] Repositório independente criado
-- [x] Runner GitHub-hosted comprovado funcional por workflow mínimo
+- [x] Runner GitHub-hosted comprovado funcional
 - [ ] Conexão do repositório ao Vercel `velor-api` após validação
 - [ ] Cutover de produção e validação Efí
 
-**Estado:** PARCIAL / ABERTO.
+**Estado:** IMPLEMENTED / ABERTO. Itens de infraestrutura externa continuam pendentes.
 
 ## Gate 1 — Core Combat
-- [ ] Herói controlável — implementação presente; falta contrato comportamental específico.
-- [ ] Movimento teclado + abstração mobile — implementação presente; falta regressão específica de input.
-- [ ] Auto-ataque — implementação integrada ao prototype; falta teste de aquisição/alvo/dano.
-- [ ] HP/dano/morte/knockback — implementação presente; cobertura atual não comprova todos os caminhos.
-- [ ] XP/level — implementação presente; falta teste de progressão real.
-- [ ] Energia compartilhada — EnergyPool validado, mas falta contrato de integração compartilhada com o match.
-- [ ] Papéis de inimigos — cinco roles implementados; falta contrato comportamental por role.
-- [x] Arena tile/state — runner testa hazards e estado de tiles.
-- [x] Destruição e Abyss — runner testa NORMAL → CRACKED → COLLAPSED → ABYSS.
-- [ ] Telegraph — implementação integrada; falta validação temporal comportamental.
-- [ ] Fases da partida — implementação das quatro fases existe; runner atual não cobre todas as transições.
-- [x] Validação headless Godot verde no repositório novo — run `35035279579`, job `104602904042`, commit `0f0e5d37abd246796f385adfaf95371c70ae790e`
+- [ ] Herói controlável — IMPLEMENTED, validação específica ainda pendente.
+- [ ] Movimento teclado + abstração mobile — IMPLEMENTED, regressão específica ainda pendente.
+- [ ] Auto-ataque — IMPLEMENTED, aquisição/alvo/dano ainda pendentes de contrato dedicado.
+- [ ] HP/dano/morte/knockback — IMPLEMENTED, A1 agora cobre dano/morte/knockback; integração completa ainda precisa regressão do core.
+- [ ] XP/level — IMPLEMENTED, A1 cobre XP por kill e reward XP; progressão completa ainda pendente.
+- [ ] Energia compartilhada — VALIDATED isoladamente; integração completa com match ainda pendente.
+- [ ] Papéis de inimigos — IMPLEMENTED; A1 adiciona comportamento verificável dos cinco roles, sujeito à validação CI.
+- [x] Arena tile/state — VALIDATED.
+- [x] Destruição e Abyss — VALIDATED.
+- [ ] Telegraph — IMPLEMENTED; A1 agora testa temporalmente, sujeito à validação CI.
+- [ ] Fases da partida — IMPLEMENTED; A1 agora cobre CONTROL → IGNITION → CATACLYSM → RESULT, sujeito à validação CI.
 
-**Estado:** IMPLEMENTADO / VALIDAÇÃO INCOMPLETA. O `[x]` anterior do Gate 1 não é mantido como fechamento agregado.
+**Estado:** IMPLEMENTED / VALIDAÇÃO INCOMPLETA até a nova suíte A1 ficar verde no CI.
 
 ## Gate 2 — Cards & Builds
 - [x] Schema de carta data-driven
@@ -53,59 +58,98 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 - [x] Cooldown
 - [x] Upgrades
 - [x] 16 cartas iniciais
-- [x] Validação funcional Godot de todas as cartas — runs `35037001697`/execução final posterior, ambiente `barichello/godot-ci:4.4.1`
+- [x] Validação funcional Godot das 16 cartas
 
-### Evidência do Gate 2
-- `card_data_contract_runner.gd`: IDs/custos, criação das cartas, catálogo, deck 8, mão 4 e draw/play.
-- `card_runtime_contract_runner.gd`: execução real das 16 cartas via `CardRuntime.play` + `CardEffectResolver`, com mutações reais de estado.
-- `card_guard_contract_runner.gd`: índice inválido, energia insuficiente e cooldown real do Blink.
-- O Gate 2 permanece validado no escopo definido; a auditoria não o reabre apenas por ausência de testes adicionais que pertencem ao core da partida.
+**Estado:** VALIDATED no escopo `16-card validated runtime scope`. O target de lançamento é 25+ e será expandido por dados, sem reabrir o baseline validado.
 
 ## Gate 3 — Vertical Slice Arena 1
-- [ ] Identidade Arena 1 — configuração/runtime presentes; falta contrato de aceitação da Arena 1.
-- [ ] Eventos ambientais telegrafados — dois eventos configurados e integrados; falta prova executável warning → resolve → mutation.
-- [ ] Cataclysm progressivo — raio e dano fora da área existem; falta validação temporal do raio/progressão.
-- [ ] 5 papéis de inimigos — roles e wave inicial existem; falta comportamento específico validado.
-- [ ] Recompensas determinísticas — cálculo existe; falta teste e integração validada ao RESULT.
-- [ ] Interações ambientais completas água/eletricidade/óleo/fogo/gelo/vento
-- [ ] UI de batalha de produção
-- [ ] Balanceamento por telemetria
+- [ ] Identidade Arena 1 — IMPLEMENTED + contrato A1, validação CI pendente.
+- [ ] Eventos ambientais telegrafados — IMPLEMENTED + A1 request → telegraph → warning → resolve → mutation, validação CI pendente.
+- [ ] Cataclysm progressivo — IMPLEMENTED + A1 prova raio start > intermediate > end e inside/outside, validação CI pendente.
+- [ ] 5 papéis de inimigos — IMPLEMENTED + A1 prova comportamento distinto, validação CI pendente.
+- [ ] Recompensas determinísticas — IMPLEMENTED + A1 integra MATCH → RESULT → rewards, validação CI pendente.
+- [ ] Interações ambientais completas água/eletricidade/óleo/fogo/gelo/vento — NOT STARTED.
+- [ ] UI de batalha de produção — BLOCKED até contrato de estado/eventos estabilizar.
+- [ ] Balanceamento por telemetria — BLOCKED até analytics.
 
-**Estado:** PARCIAL / VALIDAÇÃO INCOMPLETA.
+**Estado:** IMPLEMENTED / VALIDAÇÃO A1 PENDENTE.
+
+## Launch Product Foundation
+- [x] Separação documental `VALIDATED PROTOTYPE SCOPE` vs `LAUNCH PRODUCT TARGET`.
+- [x] `16-card validated runtime scope` preservado como baseline.
+- [x] HeroDefinition escalável.
+- [x] CardDefinition escalável.
+- [x] ArenaDefinition escalável.
+- [x] CardSynergy genérica.
+- [x] MasteryDefinition para card/hero/arena.
+- [x] ForgeDefinition para especialização futura.
+- [x] Progression/Trophy Road data-driven contract.
+- [x] Reward/Forge Crate com escolha de N preparada.
+- [x] Competitive Ruleset/Normalization preparado.
+- [x] Event/Season/Rotation separados do evento ambiental da partida.
+- [x] Analytics event schema versionado.
+- [x] ContentCatalog preparado para crescimento de conteúdo.
+- [ ] Persistência/Inventory real.
+- [ ] Economy/Entitlements reais.
+- [ ] Matchmaking/Tournaments/Leaderboards/Replays.
+- [ ] LiveOps real.
+
+**Estado:** IMPLEMENTED / FOUNDATION ONLY. Os sistemas superiores não foram implementados prematuramente.
 
 ## Gate 4 — Meta
-- [ ] Inventário persistente
-- [ ] Trophy Road
-- [ ] Progressão de arenas
-- [ ] Matchmaking indireto
-- [ ] Economia
-- [ ] Pass
-- [ ] Ads recompensados
-- [ ] Cosméticos
+- [ ] Inventário persistente — NOT STARTED.
+- [ ] Trophy Road — PLANNED / contrato preparado.
+- [ ] Progressão de arenas — PLANNED / distribuição preparada.
+- [ ] Matchmaking indireto — NOT STARTED.
+- [ ] Economia — NOT STARTED.
+- [ ] Pass — NOT STARTED.
+- [ ] Ads recompensados — NOT STARTED.
+- [ ] Cosméticos/emotes — PLANNED no contrato de rewards, implementação futura.
 
-**Estado:** NÃO INICIADO COMO SISTEMA DE META. O schema Supabase atual é apenas fundação mínima de perfil/deck; não representa inventário, economia ou progressão completas.
+**Estado:** NOT STARTED COMO SISTEMA DE META.
 
 ## Gate 5 — Social/Competitive
-- [ ] Ligas normalizadas
-- [ ] Tournaments
-- [ ] Replays/ghosts
-- [ ] Leaderboards
-- [ ] Anti-cheat híbrido
+- [ ] Ligas normalizadas — PLANNED / Ruleset preparado.
+- [ ] Tournaments — PLANNED / contrato preparado.
+- [ ] Replays/ghosts — NOT STARTED.
+- [ ] Leaderboards — NOT STARTED.
+- [ ] Anti-cheat híbrido — NOT STARTED.
 
-**Estado:** AUSENTE.
+**Estado:** PLANNED / CONTRATOS PREPARADOS, SISTEMAS AUSENTES.
 
 ## Gate 6 — Escala
-- [ ] 40+ cartas
-- [ ] 15 arenas completas
-- [ ] eventos sazonais
-- [ ] live ops
-- [ ] analytics e remote balance
+- [ ] 25+ cards de lançamento — PLANNED; baseline atual permanece 16.
+- [ ] 15 arenas completas — PLANNED; 15 definições já formalizadas, runtime completo ainda não.
+- [ ] eventos sazonais — PLANNED / contratos preparados.
+- [ ] live ops — PLANNED / contratos preparados.
+- [ ] analytics e remote balance — PLANNED / schema analítico preparado.
 
-**Estado:** AUSENTE.
+**Estado:** PLANNED / AUSENTE COMO SISTEMA DE PRODUÇÃO.
+
+## A1 — Arena 1 Runtime Hardening + Battle-State Contract
+
+### Implementação realizada
+- `MatchRuntime` introduz um contrato determinístico de estado da partida.
+- Lifecycle completo executável: CONTROL → IGNITION → CATACLYSM → RESULT.
+- Event lifecycle executável: REQUEST → TELEGRAPH → WARNING ELAPSED → RESOLVE → STATE MUTATION.
+- Cataclysm expõe raio progressivo e teste de entidade inside/outside.
+- Os cinco enemy roles possuem comportamento verificável.
+- Combat integra armor, damage, death, knockback e XP por kill.
+- RESULT calcula rewards determinísticas.
+- Bootstrap smoke runner carrega e instancia `main.tscn`.
+
+### Testes adicionados
+- `game/tests/a1_runtime_contract_runner.gd`
+- `game/tests/content_foundation_contract_runner.gd`
+- `game/tests/bootstrap_smoke_runner.gd`
+
+### Critério de fechamento
+A1 só será marcado VALIDATED depois de CI Godot 4.4.1 verde com todos os runners, incluindo os marcadores:
+- `ARENA_FORGE_A1_RUNTIME_OK`
+- `ARENA_FORGE_CONTENT_FOUNDATION_OK`
+- `ARENA_FORGE_BOOTSTRAP_SMOKE_OK`
 
 ## Ordem arquitetural por dependência
-
-Os Gates são agrupadores, não uma fila rígida. A sequência recomendada passa a ser:
 
 1. **A1 — Arena 1 Runtime Hardening + Battle-State Contract**
 2. **A2 — Estabilização do contrato de estado/eventos da batalha**
@@ -115,33 +159,14 @@ Os Gates são agrupadores, não uma fila rígida. A sequência recomendada passa
 6. **A6 — Trophy Road + Progressão de arenas**
 7. **A7 — Economy + Entitlements**
 8. **A8 — Matchmaking indireto**
-9. **A9 — Social/Competitive**
+9. **A9 — Social/Competitive: ligas, torneios e normalização completa**
 10. **A10 — Analytics + Remote Balance**
-11. **A11 — Live Ops**
-12. **A12 — Escala de conteúdo (40+ cartas / 15 arenas completas)
-
-### Próxima etapa obrigatória
-
-**A1 — Arena 1 Runtime Hardening + Battle-State Contract**.
-
-Não iniciar UI de produção, Trophy Road, economia, matchmaking, social/competitive ou live ops antes de estabilizar os contratos de estado/evento necessários.
-
-Critérios de aceite da A1:
-- lifecycle CONTROL → IGNITION → CATACLYSM → RESULT verificável;
-- evento ambiental: request → telegraph → resolve → mutação de estado;
-- warning temporal verificável;
-- cataclysm com raio progressivo verificável;
-- cinco roles exercitados por contrato comportamental;
-- rewards calculadas e integradas ao RESULT;
-- dano/morte/knockback/XP com regressão real;
-- energia/card play permanecem integrados ao core;
-- bootstrap smoke test;
-- CI Godot 4.4.1 verde com logs específicos dos runners;
-- nenhum avanço de Gate 4/5/6 nesta etapa.
+11. **A11 — Live Ops: eventos, temporadas, rotações**
+12. **A12 — Escala de conteúdo: 25+ → 40+ → 60+ → 100+ cards / 15+ arenas futuras**
 
 ## Auditoria Hórus
 
-A árvore atual do Arena Forge não contém arquivos/runtime Hórus e busca textual por `Horus` retornou zero resultados. A matriz de reutilização classifica estruturas genéricas como reutilizáveis/adaptáveis e domínios Hórus específicos como descartados. O legado continua fora da cadeia de runtime. O único risco operacional relacionado à migração permanece externo: cutover do `velor-api` e validação Efí.
+A árvore atual do Arena Forge não contém runtime Hórus e a auditoria anterior registrou zero referências textuais residuais. Estruturas genéricas continuam classificadas para **REUTILIZAR/ADAPTAR**; domínio Hórus específico permanece **DESCARTAR**. Não foi introduzida dependência Hórus nesta etapa.
 
 ## Regra de avanço
-Nenhum Gate avança por intenção. Cada item exige evidência técnica e funcional compatível com seu requisito, registrada no roadmap.
+Nenhum Gate avança por intenção. Cada item exige evidência técnica e funcional compatível com o requisito, registrada no roadmap.
