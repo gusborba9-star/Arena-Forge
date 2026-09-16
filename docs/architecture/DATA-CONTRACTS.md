@@ -55,12 +55,93 @@ Arena é sistema de gameplay, não apenas apresentação.
 
 Esses contratos não implementam loja, matchmaking, leaderboard, torneios completos, monetização ou live ops.
 
-## 4. Escalabilidade obrigatória
+## 4. Forge / Social Competitive contracts
+
+### ForgeGuildDefinition
+Unidade social coletiva do Arena Forge. O nome técnico `ForgeGuildDefinition` evita conflito com o já existente `ForgeDefinition`, que representa especialização/Forge de conteúdo.
+
+Contrato:
+`id, name, description, emblem, members, leader_id, officer_ids, level, trophies, season_id, statistics, rules, configuration, history`.
+
+Não implementa UI, chat, convite, busca ou persistência de produção.
+
+### ForgeWarDefinitions
+Contrato de `Guerra das Forjas` com:
+`id, season_id, status, start_at, preparation_at, battle_start_at, end_at, duration_seconds, participating_forges, ruleset_id, war_arena_id, battles, individual_contributions, forge_trophies, ranking, rewards`.
+
+Estados:
+`SCHEDULED → PREPARATION → ACTIVE → FINALIZING → COMPLETED`.
+
+O ciclo inicial de referência é configurável em dados: preparação 24h, guerra ativa 48h e finalização configurável.
+
+### WarArenaDefinition
+Arena especial independente das arenas normais:
+`id, name, terrain, hazards, events, rules, modifiers, objectives, visual_identity`.
+
+### WarRulesetDefinitions
+Contrato para:
+- hero/card normalization;
+- deck/card/hero restrictions;
+- arena modifiers;
+- event frequency;
+- battle attempts / War Energy;
+- scoring;
+- contribution;
+- objectives;
+- rewards.
+
+### WarScoringDefinitions
+Permite controlar sem hardcode:
+`victory, defeat, strength_difference, objectives, bonuses, limits, max_contribution, multipliers`.
+
+### WarContributionDefinitions
+Permite definir métricas, elegibilidade, limites individuais/coletivos, agregação e contribuição por objetivos.
+
+### WarRankingDefinition
+Suporta múltiplas Forjas, entradas, score, desempates e fechamento determinístico/finalizado.
+
+### WarRewardsDefinitions
+Suporta placement, participation, individual contribution, objectives e Forge rewards. Inclui política de idempotência para futura prevenção de duplicação.
+
+### SeasonDefinitions
+Uma Season pode referenciar múltiplas guerras, ruleset, arena especial, rewards, ranking e identidade visual.
+
+A arquitetura social/competitiva é apenas fundação. Não implementa matchmaking, leaderboard social, chat, persistência, notificações ou guerra real nesta etapa.
+
+## 5. Analytics social
+
+`AnalyticsContract` permanece versionado e agora suporta:
+- `forge_created`
+- `forge_joined`
+- `forge_left`
+- `forge_war_joined`
+- `forge_war_started`
+- `forge_war_battle`
+- `forge_war_contribution`
+- `forge_war_completed`
+- `forge_war_rewarded`
+
+## 6. Escalabilidade obrigatória
 
 O núcleo deve permanecer estável enquanto o conteúdo cresce:
 
 - cards: `25 → 40 → 60 → 100+`;
 - heroes: `8 → 10 → 15+`;
-- arenas: `15 → futuras arenas`.
+- arenas: `15 → futuras arenas`;
+- Forjas: `Forge #2 → Forge #N`;
+- guerras: `ForgeWar #100 → ForgeWar #N`;
+- War Arenas: `WarArena #10 → WarArena #N`.
 
-Adicionar conteúdo deve ser uma alteração de dados/fixtures, não uma alteração no motor de combate ou nas regras de coleção.
+Adicionar conteúdo deve ser uma alteração de dados/fixtures, não uma alteração no motor de combate, guerra ou regras de coleção.
+
+## 7. Fairness / integridade futura
+
+Os contratos devem permitir:
+- limites de contribuição;
+- limites de batalhas/War Energy;
+- idempotência;
+- resultados imutáveis após fechamento;
+- fechamento determinístico;
+- ranking reproduzível.
+
+Segurança de produção completa e anti-exploit permanecem sistemas futuros.
