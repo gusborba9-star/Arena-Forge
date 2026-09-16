@@ -41,3 +41,9 @@ jobs:
         run: godot --headless --path game --script tests/card_runtime_contract_runner.gd
       - name: Run card guard contracts
         run: godot --headless --path game --script tests/card_guard_contract_runner.gd
+      - name: Run content foundation contracts
+        run: godot --headless --path game --script tests/content_foundation_contract_runner.gd
+      - name: Run A1 runtime contracts
+        run: godot --headless --path game --script tests/a1_runtime_contract_runner.gd
+      - name: Run bootstrap smoke contract
+        run: godot --headless --path game --script tests/bootstrap_smoke_runner.gd
