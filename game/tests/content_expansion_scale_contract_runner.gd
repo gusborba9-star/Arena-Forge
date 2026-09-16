@@ -74,13 +74,11 @@ func _init() -> void:
 
     if failures.is_empty():
         print("ARENA_FORGE_CONTENT_EXPANSION_SCALE_OK card=26 hero=9 arena=16 war_arena=2 forge=2 forge_war=100")
-        OS.set_exit_code(0)
         quit()
         return
     for failure in failures:
         push_error("CONTENT EXPANSION SCALE FAILURE: " + failure)
-    OS.set_exit_code(1)
-    quit()
+    quit(1)
 
 func _assert_engine_has_no_fixture_branches(failures: Array[String]) -> void:
     var engine_paths := [

@@ -27,14 +27,12 @@ func _init() -> void:
 
     if failures.is_empty():
         print("ARENA_FORGE_CONTENT_FOUNDATION_OK cards=16 validated heroes=4 fixtures arenas=15 launch cards>=25 heroes>=8")
-        OS.set_exit_code(0)
         quit()
         return
 
     for failure in failures:
         push_error("CONTENT FOUNDATION FAILURE: " + failure)
-    OS.set_exit_code(1)
-    quit()
+    quit(1)
 
 func _validate_cards(cards: Dictionary, failures: Array[String]) -> void:
     for card_id in cards.keys():
