@@ -12,6 +12,7 @@ static func from_dict(value: Dictionary) -> ForgeDefinition:
     result.id = str(value.get("id", ""))
     result.target_type = str(value.get("target_type", ""))
     result.target_id = str(value.get("target_id", ""))
-    result.options = value.get("options", []).duplicate(true)
+    for option in value.get("options", []):
+        result.options.append(option.duplicate(true))
     result.normalized_mode_policy = value.get("normalized_mode_policy", {}).duplicate(true)
     return result
