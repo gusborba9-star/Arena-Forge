@@ -22,7 +22,8 @@ static func from_dict(value: Dictionary) -> CardDefinition:
     result.category = str(value.get("category", "spell"))
     result.energy_cost = maxi(0, int(value.get("energy_cost", 0)))
     result.cooldown = maxf(0.0, float(value.get("cooldown", 0.0)))
-    result.effects = value.get("effects", []).duplicate(true)
+    for effect in value.get("effects", []):
+        result.effects.append(effect.duplicate(true))
     for tag in value.get("tags", []):
         result.tags.append(str(tag))
     result.unlock_arena = maxi(1, int(value.get("unlock_arena", 1)))
