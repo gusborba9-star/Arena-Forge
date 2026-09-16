@@ -1,17 +1,17 @@
 # Arena Forge — Roadmap Executivo
 
 ## Regra de execução
-CRIAR → ADAPTAR → EXCLUIR LEGADO → TESTAR → VALIDAR → CORRIGIR → TESTAR NOVAMENTE → ATUALIZAR ROADMAP → AVANÇAR.
+CRIAR → ADAPTAR → EXCLUIR LEGADO → TESTAR → VALIDAR → CORRIGIR → TESTAR NOVAMENTE → REGISTRAR EVIDÊNCIA → ATUALIZAR ROADMAP → AVANÇAR.
+
+CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado concluído quando houver implementação real, teste comportamental, validação e regressão compatível com o requisito.
 
 ## Estado de validação — 2026-09-15
-- O runner GitHub-hosted foi comprovado funcional por workflow mínimo: run `35013229305` concluiu com sucesso.
-- A recuperação do runner permitiu execução real do CI; o primeiro problema Godot foi o bootstrap do registro de classes globais em checkout limpo.
-- Correção arquitetural: o job Godot inicializa o projeto em modo editor headless antes dos contratos, sem preloads artificiais nem mocks.
-- Run `35035279579` (`#54`) validou Gate 1: `validate` passou integralmente e Godot 4.4.1 executou `tests/engine_contract_runner.gd` com sucesso.
-- Para Gate 2, a auditoria confirmou que as 16 cartas são data-driven e que o runtime real é composto por `ArenaCard`, `ArenaDeck`, `CardRuntime`, `CardEffectResolver`, `EnergyPool`, `ArenaState`, `ArenaHero` e `ArenaEnemy`.
-- A primeira suíte funcional de cartas revelou uma falha de qualidade de teste: um `assert` falhava em uma carta composta, mas não produzia exit code não-zero no runner. O teste foi corrigido para falhar explicitamente com `quit(1)` e o cenário composto foi ajustado para manter o inimigo vivo quando o efeito de push também é validado.
-- Run final de Gate 2 `35037001697` (`#69`) executou no mesmo ambiente `barichello/godot-ci:4.4.1`. `validate` e `godot` concluíram com sucesso.
-- Evidência funcional final: job Godot `104608252568` executou `tests/engine_contract_runner.gd`, `tests/card_data_contract_runner.gd`, `tests/card_runtime_contract_runner.gd` e `tests/card_guard_contract_runner.gd`, todos concluídos com sucesso. Os logs registraram `ARENA_FORGE_CARD_DATA_OK cards=16`, `ARENA_FORGE_CARD_RUNTIME_OK cards=16` e `ARENA_FORGE_CARD_GUARDS_OK invalid=2 cooldown=5`.
+- Run `35013229305` comprovou o runner GitHub-hosted funcional.
+- Run `35035279579` (`#54`) comprovou o bootstrap de classes Godot e validou o conjunto de contratos do core existente.
+- Run `35037001697` (`#69`) e a execução final posterior comprovaram os contratos funcionais das 16 cartas no ambiente Godot 4.4.1.
+- Auditoria de dependências registrada em `docs/audit/PRODUCT-DEPENDENCY-AUDIT.md`, baseline `f57fc16487f425cebe8f53c7c5812f22ea90de77`.
+- A auditoria reabriu itens de Gate 1 e Gate 3 que estavam marcados `[x]` sem cobertura comportamental específica suficiente. Isso não significa que o código deixou de existir; significa que a evidência não sustenta o status de conclusão sob o protocolo atual.
+- A ordem de execução passa a ser determinada por dependências arquiteturais, não pela numeração dos Gates.
 
 ## Gate 0 — Fundação
 - [x] Blueprint
@@ -25,19 +25,23 @@ CRIAR → ADAPTAR → EXCLUIR LEGADO → TESTAR → VALIDAR → CORRIGIR → TES
 - [ ] Conexão do repositório ao Vercel `velor-api` após validação
 - [ ] Cutover de produção e validação Efí
 
+**Estado:** PARCIAL / ABERTO.
+
 ## Gate 1 — Core Combat
-- [x] Herói controlável
-- [x] Movimento teclado + abstração mobile
-- [x] Auto-ataque
-- [x] HP/dano/morte/knockback
-- [x] XP/level
-- [x] Energia compartilhada
-- [x] Papéis de inimigos
-- [x] Arena tile/state
-- [x] Destruição e Abyss
-- [x] Telegraph
-- [x] Fases da partida
+- [ ] Herói controlável — implementação presente; falta contrato comportamental específico.
+- [ ] Movimento teclado + abstração mobile — implementação presente; falta regressão específica de input.
+- [ ] Auto-ataque — implementação integrada ao prototype; falta teste de aquisição/alvo/dano.
+- [ ] HP/dano/morte/knockback — implementação presente; cobertura atual não comprova todos os caminhos.
+- [ ] XP/level — implementação presente; falta teste de progressão real.
+- [ ] Energia compartilhada — EnergyPool validado, mas falta contrato de integração compartilhada com o match.
+- [ ] Papéis de inimigos — cinco roles implementados; falta contrato comportamental por role.
+- [x] Arena tile/state — runner testa hazards e estado de tiles.
+- [x] Destruição e Abyss — runner testa NORMAL → CRACKED → COLLAPSED → ABYSS.
+- [ ] Telegraph — implementação integrada; falta validação temporal comportamental.
+- [ ] Fases da partida — implementação das quatro fases existe; runner atual não cobre todas as transições.
 - [x] Validação headless Godot verde no repositório novo — run `35035279579`, job `104602904042`, commit `0f0e5d37abd246796f385adfaf95371c70ae790e`
+
+**Estado:** IMPLEMENTADO / VALIDAÇÃO INCOMPLETA. O `[x]` anterior do Gate 1 não é mantido como fechamento agregado.
 
 ## Gate 2 — Cards & Builds
 - [x] Schema de carta data-driven
@@ -49,26 +53,25 @@ CRIAR → ADAPTAR → EXCLUIR LEGADO → TESTAR → VALIDAR → CORRIGIR → TES
 - [x] Cooldown
 - [x] Upgrades
 - [x] 16 cartas iniciais
-- [x] Validação funcional Godot de todas as cartas — run `35037001697`, job `104608252568`, commit `9560621689583b0ccc5ebf630560eb289d372cfb`
+- [x] Validação funcional Godot de todas as cartas — runs `35037001697`/execução final posterior, ambiente `barichello/godot-ci:4.4.1`
 
 ### Evidência do Gate 2
-- `card_data_contract_runner.gd`: 16 IDs, custos, criação das cartas, catálogo, deck 8, mão 4 e draw/play.
-- `card_runtime_contract_runner.gd`: execução real das 16 cartas via `CardRuntime.play` + `CardEffectResolver`, com mutação real de dano, cura, push, tiles de arena, speed, spawn e slow, além de consumo de energia e rotação da mão.
-- `card_guard_contract_runner.gd`: uso inválido por índice/energia e cooldown real do Blink.
-- Ambiente: Godot `4.4.1.stable.official.49a5bc7b6`, container `barichello/godot-ci:4.4.1`.
-- Workflow: inicialização headless do registro de classes antes da execução dos contratos.
-- `validate`: PASS — npm install, test, typecheck, lint e build.
-- `godot`: PASS — todos os quatro runners concluídos com sucesso.
+- `card_data_contract_runner.gd`: IDs/custos, criação das cartas, catálogo, deck 8, mão 4 e draw/play.
+- `card_runtime_contract_runner.gd`: execução real das 16 cartas via `CardRuntime.play` + `CardEffectResolver`, com mutações reais de estado.
+- `card_guard_contract_runner.gd`: índice inválido, energia insuficiente e cooldown real do Blink.
+- O Gate 2 permanece validado no escopo definido; a auditoria não o reabre apenas por ausência de testes adicionais que pertencem ao core da partida.
 
 ## Gate 3 — Vertical Slice Arena 1
-- [x] Identidade Arena 1
-- [x] Eventos ambientais telegrafados
-- [x] Cataclysm progressivo
-- [x] 5 papéis de inimigos
-- [x] Recompensas determinísticas
+- [ ] Identidade Arena 1 — configuração/runtime presentes; falta contrato de aceitação da Arena 1.
+- [ ] Eventos ambientais telegrafados — dois eventos configurados e integrados; falta prova executável warning → resolve → mutation.
+- [ ] Cataclysm progressivo — raio e dano fora da área existem; falta validação temporal do raio/progressão.
+- [ ] 5 papéis de inimigos — roles e wave inicial existem; falta comportamento específico validado.
+- [ ] Recompensas determinísticas — cálculo existe; falta teste e integração validada ao RESULT.
 - [ ] Interações ambientais completas água/eletricidade/óleo/fogo/gelo/vento
 - [ ] UI de batalha de produção
 - [ ] Balanceamento por telemetria
+
+**Estado:** PARCIAL / VALIDAÇÃO INCOMPLETA.
 
 ## Gate 4 — Meta
 - [ ] Inventário persistente
@@ -80,12 +83,16 @@ CRIAR → ADAPTAR → EXCLUIR LEGADO → TESTAR → VALIDAR → CORRIGIR → TES
 - [ ] Ads recompensados
 - [ ] Cosméticos
 
+**Estado:** NÃO INICIADO COMO SISTEMA DE META. O schema Supabase atual é apenas fundação mínima de perfil/deck; não representa inventário, economia ou progressão completas.
+
 ## Gate 5 — Social/Competitive
 - [ ] Ligas normalizadas
 - [ ] Tournaments
 - [ ] Replays/ghosts
 - [ ] Leaderboards
 - [ ] Anti-cheat híbrido
+
+**Estado:** AUSENTE.
 
 ## Gate 6 — Escala
 - [ ] 40+ cartas
@@ -94,5 +101,47 @@ CRIAR → ADAPTAR → EXCLUIR LEGADO → TESTAR → VALIDAR → CORRIGIR → TES
 - [ ] live ops
 - [ ] analytics e remote balance
 
-### Regra de avanço
-Nenhum Gate avança por intenção. O avanço exige evidência técnica e funcional registrada pelo CI e pelos testes do motor.
+**Estado:** AUSENTE.
+
+## Ordem arquitetural por dependência
+
+Os Gates são agrupadores, não uma fila rígida. A sequência recomendada passa a ser:
+
+1. **A1 — Arena 1 Runtime Hardening + Battle-State Contract**
+2. **A2 — Estabilização do contrato de estado/eventos da batalha**
+3. **A3 — UI de batalha de produção**
+4. **A4 — Persistence/Identity Contract**
+5. **A5 — Inventory + Rewards persistentes**
+6. **A6 — Trophy Road + Progressão de arenas**
+7. **A7 — Economy + Entitlements**
+8. **A8 — Matchmaking indireto**
+9. **A9 — Social/Competitive**
+10. **A10 — Analytics + Remote Balance**
+11. **A11 — Live Ops**
+12. **A12 — Escala de conteúdo (40+ cartas / 15 arenas completas)
+
+### Próxima etapa obrigatória
+
+**A1 — Arena 1 Runtime Hardening + Battle-State Contract**.
+
+Não iniciar UI de produção, Trophy Road, economia, matchmaking, social/competitive ou live ops antes de estabilizar os contratos de estado/evento necessários.
+
+Critérios de aceite da A1:
+- lifecycle CONTROL → IGNITION → CATACLYSM → RESULT verificável;
+- evento ambiental: request → telegraph → resolve → mutação de estado;
+- warning temporal verificável;
+- cataclysm com raio progressivo verificável;
+- cinco roles exercitados por contrato comportamental;
+- rewards calculadas e integradas ao RESULT;
+- dano/morte/knockback/XP com regressão real;
+- energia/card play permanecem integrados ao core;
+- bootstrap smoke test;
+- CI Godot 4.4.1 verde com logs específicos dos runners;
+- nenhum avanço de Gate 4/5/6 nesta etapa.
+
+## Auditoria Hórus
+
+A árvore atual do Arena Forge não contém arquivos/runtime Hórus e busca textual por `Horus` retornou zero resultados. A matriz de reutilização classifica estruturas genéricas como reutilizáveis/adaptáveis e domínios Hórus específicos como descartados. O legado continua fora da cadeia de runtime. O único risco operacional relacionado à migração permanece externo: cutover do `velor-api` e validação Efí.
+
+## Regra de avanço
+Nenhum Gate avança por intenção. Cada item exige evidência técnica e funcional compatível com seu requisito, registrada no roadmap.
