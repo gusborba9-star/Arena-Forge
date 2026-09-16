@@ -3,7 +3,7 @@ extends RefCounted
 
 static func create(data: Dictionary = {}) -> Dictionary:
     return {
-        "id": str(data.get("id", "")),
+        "id": str(data.get("id", "war_rewards_default")),
         "placement_rewards": data.get("placement_rewards", {}).duplicate(true),
         "participation_rewards": data.get("participation_rewards", {}).duplicate(true),
         "individual_contribution_rewards": data.get("individual_contribution_rewards", {}).duplicate(true),
