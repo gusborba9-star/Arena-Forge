@@ -9,7 +9,11 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 - `16-card validated runtime scope` permanece preservado como baseline técnico.
 - O **Launch Product Target** foi formalizado: 25+ cards, 8+ heroes, 15 arenas, coleção/progressão/mastery/Forge/rewards/eventos/competição/analytics/live ops preparados por contratos.
 - A fundação social/competitiva foi formalmente incorporada: Forja + Guerra das Forjas + War Arena + War Rulesets + scoring/contribution/ranking/rewards + Season linkage.
-- Novos runners foram adicionados para Content Foundation, Forge War Foundation, A1 Runtime e bootstrap smoke. A validação CI desses contratos é requisito para fechar A1.
+- Novos runners foram adicionados para Content Foundation, Forge War Foundation, A1 Runtime, Expansion Scale e bootstrap smoke.
+- **CI #129 / run `35052778615` falhou no job Godot no runner `content_foundation_contract_runner.gd`; Node ficou integralmente verde.** A1 e Expansion Scale não foram validados porque os runners posteriores foram corretamente bloqueados.
+- A correção de `mastery_id` nos 16 cards foi aplicada antes do #129; o runner chegou a imprimir `ARENA_FORGE_CONTENT_FOUNDATION_OK`, mas o processo encerrou com exit code 1. O runner foi endurecido para registrar explicitamente o exit code e falhas futuras.
+- Expansion Scale foi endurecido para validar pipeline comportamental de Card #26, construção/consumo de Hero #9, processamento de Arena #16 e referências sociais, além de procurar tokens de fixtures nos motores auditados.
+- Auditoria independente de Vercel/Supabase Hórus foi registrada em `docs/audit/HORUS-INFRASTRUCTURE-MIGRATION-AUDIT.md`; nenhuma migração ou alteração de infraestrutura foi executada.
 - A ordem de execução continua sendo determinada por dependências arquiteturais, não pela numeração dos Gates.
 
 ## Estados usados
@@ -205,8 +209,14 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 ### Testes adicionados
 - `game/tests/a1_runtime_contract_runner.gd`
 - `game/tests/content_foundation_contract_runner.gd`
+- `game/tests/content_expansion_scale_contract_runner.gd`
 - `game/tests/forge_war_foundation_contract_runner.gd`
 - `game/tests/bootstrap_smoke_runner.gd`
+
+### Evidência atual
+- CI #129 / run `35052778615`: Node verde; Godot falhou em Content Foundation e bloqueou os runners posteriores.
+- O runner de Expansion Scale não chegou a executar no #129.
+- Após o #129 foram aplicados commits de hardening dos runners e auditoria Hórus; os respectivos commits ainda aguardam execução CI no momento deste registro.
 
 ### Critério de fechamento
 A1 só será marcado VALIDATED depois de CI Godot 4.4.1 verde com todos os runners, incluindo os marcadores:
@@ -215,8 +225,22 @@ A1 só será marcado VALIDATED depois de CI Godot 4.4.1 verde com todos os runne
 - `ARENA_FORGE_FORGE_WAR_FOUNDATION_OK`
 - `ARENA_FORGE_BOOTSTRAP_SMOKE_OK`
 
+## Expansion Scale Contract
+
+### Critério
+`NOVO CONTEÚDO = DADOS, NÃO NOVO CÓDIGO DE MOTOR.`
+
+### Cobertura implementada
+- Card #26 atravessa ContentCatalog → ArenaCard → ArenaDeck → CardRuntime → CardEffectResolver → efeito real, incluindo consumo de energia e avanço de draw index.
+- Hero #9 atravessa `HeroDefinition.from_dict`.
+- Arena #16 atravessa `ArenaDefinition.from_dict` e configuração/tick de `ArenaDirector`, incluindo cataclysm genérico.
+- WarArena adicional, Forge adicional e ForgeWar adicional são registrados e referenciados por IDs.
+- O runner inspeciona `CardRuntime`, `CardEffectResolver`, `CombatSystem`, `ArenaDirector`, `MatchRuntime`, `ArenaState` e `ForgeWarDefinitions` para impedir tokens de fixtures hardcoded.
+
+**Estado:** IMPLEMENTED / VALIDATION PENDING. Não validado até CI executar e concluir verde.
+
 ## A2 — MatchRuntime como única fonte de verdade
-**BLOCKED até A1 VALIDATED.**
+**BLOCKED até A1 + Expansion Scale VALIDATED.**
 
 Quando liberado, auditará e consolidará:
 - `arena_forge_prototype.gd`;
@@ -229,12 +253,12 @@ Quando liberado, auditará e consolidará:
 - `MatchProgression`;
 - `MatchRewards`.
 
-Objetivo: eliminar lógica duplicada e garantir uma única autoridade de estado da batalha. Não executar A2 enquanto A1 estiver apenas IMPLEMENTED/VALIDATION PENDING.
+Objetivo: eliminar lógica duplicada e garantir uma única autoridade de estado da batalha. Não executar A2 enquanto A1 ou Expansion Scale estiverem apenas IMPLEMENTED/VALIDATION PENDING.
 
 ## Ordem arquitetural por dependência
 
 1. **A1 — Arena 1 Runtime Hardening + Battle-State Contract**
-2. **CI A1 — validação integral**
+2. **Expansion Scale Contract — validação integral**
 3. **A2 — MatchRuntime como única fonte de verdade**
 4. **A3 — UI de batalha de produção**
 5. **A4 — Persistence/Identity Contract**
@@ -249,7 +273,9 @@ Objetivo: eliminar lógica duplicada e garantir uma única autoridade de estado 
 
 ## Auditoria Hórus
 
-A árvore atual do Arena Forge não contém runtime Hórus e a auditoria anterior registrou zero referências textuais residuais. Estruturas genéricas continuam classificadas para **REUTILIZAR/ADAPTAR**; domínio Hórus específico permanece **DESCARTAR**. Não foi introduzida dependência Hórus nesta etapa.
+A árvore atual do Arena Forge não contém runtime Hórus e a auditoria anterior registrou zero referências textuais residuais. A auditoria externa de infraestrutura confirmou que `velor-api` permanece ligado ao repositório Hórus e que o Supabase `gusborba9-star-Horus-` permanece separado. Nenhuma conexão, deploy, rename ou migração foi executada.
+
+Documento: `docs/audit/HORUS-INFRASTRUCTURE-MIGRATION-AUDIT.md`.
 
 ## Regra de avanço
 Nenhum Gate avança por intenção. Cada item exige evidência técnica e funcional compatível com o requisito, registrada no roadmap.
