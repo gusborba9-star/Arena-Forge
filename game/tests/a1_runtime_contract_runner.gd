@@ -55,7 +55,7 @@ func _run_event_lifecycle(failures: Array[String]) -> void:
     runtime.configure(custom, 10.0, 20.0, 30.0)
     runtime.request_event()
     runtime.tick(0.5)
-    _check(runtime.arena.get_tile(0, 0) == ArenaState.Tile.CRACKED, "destruction event must execute tile mutation", failures)
+    _check(runtime.arena.get_tile(3, 2) == ArenaState.Tile.CRACKED, "destruction event must execute tile mutation", failures)
 
 func _run_cataclysm(failures: Array[String]) -> void:
     var runtime := MatchRuntime.new()
