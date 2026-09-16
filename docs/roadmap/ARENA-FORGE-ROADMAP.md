@@ -8,8 +8,8 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 ## Estado de validação — 2026-09-16
 - `16-card validated runtime scope` permanece preservado como baseline técnico.
 - O **Launch Product Target** foi formalizado: 25+ cards, 8+ heroes, 15 arenas, coleção/progressão/mastery/Forge/rewards/eventos/competição/analytics/live ops preparados por contratos.
-- A fundação data-driven foi ampliada sem implementar prematuramente meta/monetização/competitive completos.
-- Novos runners foram adicionados para Content Foundation, A1 Runtime e bootstrap smoke. A validação CI desses novos contratos é requisito para fechar A1.
+- A fundação social/competitiva foi formalmente incorporada: Forja + Guerra das Forjas + War Arena + War Rulesets + scoring/contribution/ranking/rewards + Season linkage.
+- Novos runners foram adicionados para Content Foundation, Forge War Foundation, A1 Runtime e bootstrap smoke. A validação CI desses contratos é requisito para fechar A1.
 - A ordem de execução continua sendo determinada por dependências arquiteturais, não pela numeração dos Gates.
 
 ## Estados usados
@@ -18,6 +18,7 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 - **PLANNED** — contrato/decisão registrada, implementação futura.
 - **BLOCKED** — depende de outro estágio.
 - **NOT STARTED** — não implementado.
+- **ARCHITECTURE PREPARED** — contrato data-driven preparado e testado arquiteturalmente, mas sistema de produção ainda não implementado.
 
 ## Gate 0 — Fundação
 - [x] Blueprint
@@ -89,12 +90,73 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 - [x] Event/Season/Rotation separados do evento ambiental da partida.
 - [x] Analytics event schema versionado.
 - [x] ContentCatalog preparado para crescimento de conteúdo.
+- [x] ForgeGuildDefinition para Forjas sociais.
+- [x] ForgeWar + estados + duração configurável.
+- [x] WarArenaDefinition.
+- [x] WarRulesetDefinitions.
+- [x] WarScoringDefinitions.
+- [x] WarContributionDefinitions.
+- [x] WarRankingDefinition.
+- [x] WarRewardsDefinitions.
+- [x] SeasonDefinitions com referência a guerras.
+- [x] Analytics social da Guerra das Forjas.
 - [ ] Persistência/Inventory real.
 - [ ] Economy/Entitlements reais.
 - [ ] Matchmaking/Tournaments/Leaderboards/Replays.
 - [ ] LiveOps real.
 
-**Estado:** IMPLEMENTED / FOUNDATION ONLY. Os sistemas superiores não foram implementados prematuramente.
+**Estado:** IMPLEMENTED / FOUNDATION ONLY + SOCIAL ARCHITECTURE PREPARED. Os sistemas superiores não foram implementados prematuramente.
+
+## FORGE / SOCIAL
+- [x] **ARCHITECTURE PREPARED** — `ForgeGuildDefinition`.
+- [x] **ARCHITECTURE PREPARED** — membros, líder, officers, nível, troféus, temporada, estatísticas, regras, configuração e histórico.
+- [ ] UI social.
+- [ ] convites.
+- [ ] busca.
+- [ ] chat.
+- [ ] persistência de produção.
+
+**Estado:** ARCHITECTURE PREPARED.
+
+## FORGE WAR
+- [x] **ARCHITECTURE PREPARED** — `ForgeWarDefinitions`.
+- [x] **ARCHITECTURE PREPARED** — `SCHEDULED → PREPARATION → ACTIVE → FINALIZING → COMPLETED`.
+- [x] **ARCHITECTURE PREPARED** — 24h preparation + 48h active como configuração inicial.
+- [x] **ARCHITECTURE PREPARED** — participação múltipla de Forjas.
+- [x] **ARCHITECTURE PREPARED** — batalhas individuais e contribuição agregada.
+- [ ] Guerra real.
+- [ ] matchmaking real.
+- [ ] notificações.
+
+**Estado:** ARCHITECTURE PREPARED.
+
+## WAR ARENA
+- [x] **ARCHITECTURE PREPARED** — `WarArenaDefinition`.
+- [x] **ARCHITECTURE PREPARED** — terrain, hazards, events, rules, modifiers e objectives.
+- [ ] War Arena runtime.
+- [ ] War Arena visual production.
+
+**Estado:** ARCHITECTURE PREPARED.
+
+## WAR RULESET
+- [x] **ARCHITECTURE PREPARED** — normalização hero/card.
+- [x] **ARCHITECTURE PREPARED** — deck/card/hero restrictions.
+- [x] **ARCHITECTURE PREPARED** — arena modifiers e event frequency.
+- [x] **ARCHITECTURE PREPARED** — War Energy/Battle Attempts.
+- [x] **ARCHITECTURE PREPARED** — scoring/contribution/objectives/rewards.
+- [ ] regras de guerra de produção.
+
+**Estado:** ARCHITECTURE PREPARED.
+
+## WAR FAIRNESS / INTEGRITY
+- [x] **ARCHITECTURE PREPARED** — contribution limits.
+- [x] **ARCHITECTURE PREPARED** — battle attempt limits.
+- [x] **ARCHITECTURE PREPARED** — reward idempotency policy.
+- [x] **ARCHITECTURE PREPARED** — deterministic ranking finalization.
+- [ ] enforcement de produção.
+- [ ] anti-exploit completo.
+
+**Estado:** ARCHITECTURE PREPARED.
 
 ## Gate 4 — Meta
 - [ ] Inventário persistente — NOT STARTED.
@@ -109,13 +171,15 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 **Estado:** NOT STARTED COMO SISTEMA DE META.
 
 ## Gate 5 — Social/Competitive
+- [ ] Forjas sociais — ARCHITECTURE PREPARED.
+- [ ] Guerra das Forjas — ARCHITECTURE PREPARED.
 - [ ] Ligas normalizadas — PLANNED / Ruleset preparado.
 - [ ] Tournaments — PLANNED / contrato preparado.
 - [ ] Replays/ghosts — NOT STARTED.
 - [ ] Leaderboards — NOT STARTED.
 - [ ] Anti-cheat híbrido — NOT STARTED.
 
-**Estado:** PLANNED / CONTRATOS PREPARADOS, SISTEMAS AUSENTES.
+**Estado:** ARCHITECTURE PREPARED / SISTEMAS SOCIAIS E COMPETITIVOS AUSENTES.
 
 ## Gate 6 — Escala
 - [ ] 25+ cards de lançamento — PLANNED; baseline atual permanece 16.
@@ -141,28 +205,47 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 ### Testes adicionados
 - `game/tests/a1_runtime_contract_runner.gd`
 - `game/tests/content_foundation_contract_runner.gd`
+- `game/tests/forge_war_foundation_contract_runner.gd`
 - `game/tests/bootstrap_smoke_runner.gd`
 
 ### Critério de fechamento
 A1 só será marcado VALIDATED depois de CI Godot 4.4.1 verde com todos os runners, incluindo os marcadores:
 - `ARENA_FORGE_A1_RUNTIME_OK`
 - `ARENA_FORGE_CONTENT_FOUNDATION_OK`
+- `ARENA_FORGE_FORGE_WAR_FOUNDATION_OK`
 - `ARENA_FORGE_BOOTSTRAP_SMOKE_OK`
+
+## A2 — MatchRuntime como única fonte de verdade
+**BLOCKED até A1 VALIDATED.**
+
+Quando liberado, auditará e consolidará:
+- `arena_forge_prototype.gd`;
+- `MatchRuntime`;
+- `MatchState`;
+- `ArenaDirector`;
+- `Telegraph`;
+- `ArenaState`;
+- `CombatSystem`;
+- `MatchProgression`;
+- `MatchRewards`.
+
+Objetivo: eliminar lógica duplicada e garantir uma única autoridade de estado da batalha. Não executar A2 enquanto A1 estiver apenas IMPLEMENTED/VALIDATION PENDING.
 
 ## Ordem arquitetural por dependência
 
 1. **A1 — Arena 1 Runtime Hardening + Battle-State Contract**
-2. **A2 — Estabilização do contrato de estado/eventos da batalha**
-3. **A3 — UI de batalha de produção**
-4. **A4 — Persistence/Identity Contract**
-5. **A5 — Inventory + Rewards persistentes**
-6. **A6 — Trophy Road + Progressão de arenas**
-7. **A7 — Economy + Entitlements**
-8. **A8 — Matchmaking indireto**
-9. **A9 — Social/Competitive: ligas, torneios e normalização completa**
-10. **A10 — Analytics + Remote Balance**
-11. **A11 — Live Ops: eventos, temporadas, rotações**
-12. **A12 — Escala de conteúdo: 25+ → 40+ → 60+ → 100+ cards / 15+ arenas futuras**
+2. **CI A1 — validação integral**
+3. **A2 — MatchRuntime como única fonte de verdade**
+4. **A3 — UI de batalha de produção**
+5. **A4 — Persistence/Identity Contract**
+6. **A5 — Inventory + Rewards persistentes**
+7. **A6 — Trophy Road + Progressão de arenas**
+8. **A7 — Economy + Entitlements**
+9. **A8 — Matchmaking indireto**
+10. **A9 — Social/Competitive runtime: Forjas, Guerra das Forjas, ligas, torneios e normalização completa**
+11. **A10 — Analytics + Remote Balance**
+12. **A11 — Live Ops: eventos, temporadas, rotações**
+13. **A12 — Escala de conteúdo: 25+ → 40+ → 60+ → 100+ cards / 15+ arenas futuras**
 
 ## Auditoria Hórus
 
