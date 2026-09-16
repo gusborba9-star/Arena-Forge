@@ -22,12 +22,16 @@ func _init() -> void:
     _check(RewardDefinitions.reward_schema()["choice_policy"]["enabled"], "rewards must support choice-of-N", failures)
     _check(CompetitiveDefinitions.normalized_ruleset()["normalization"]["card_level"] == "fixed", "competitive normalization must be configurable", failures)
     _check(AnalyticsContract.is_supported("card_played"), "analytics schema must support core events", failures)
+
     if failures.is_empty():
         print("ARENA_FORGE_CONTENT_FOUNDATION_OK cards=16 validated heroes=4 fixtures arenas=15 launch cards>=25 heroes>=8")
-        quit(0)
+        OS.set_exit_code(0)
+        quit()
+        return
     for failure in failures:
         push_error("CONTENT FOUNDATION FAILURE: " + failure)
-    quit(1)
+    OS.set_exit_code(1)
+    quit()
 
 func _check(condition: bool, message: String, failures: Array[String]) -> void:
     if not condition:
