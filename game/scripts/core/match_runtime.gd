@@ -1,0 +1,105 @@
+class_name MatchRuntime
+extends RefCounted
+
+signal phase_changed(previous: MatchState.Phase, current: MatchState.Phase)
+signal event_requested(event: Dictionary)
+signal event_resolved(event: Dictionary)
+signal finished(rewards: Dictionary)
+
+var state := MatchState.new()
+var arena := ArenaState.new()
+var director := ArenaDirector.new()
+var telegraph := Telegraph.new()
+var combat := CombatSystem.new()
+var progression := MatchProgression.new()
+var hero := ArenaHero.new()
+var enemies: Array[ArenaEnemy] = []
+var pending_event: Dictionary = {}
+var kills := 0
+var rewards: Dictionary = {}
+var _last_phase := MatchState.Phase.CONTROL
+var _event_count := 0
+
+func configure(arena_definition: Dictionary, control_end := 90.0, cataclysm_start := 180.0, end_seconds := 240.0) -> void:
+    state.configure(control_end, cataclysm_start, end_seconds)
+    director.configure(arena_definition)
+    arena = ArenaState.new()
+    telegraph = Telegraph.new()
+    hero = ArenaHero.new()
+    hero.position = Vector2(0.0, 0.0)
+    enemies.clear()
+    pending_event.clear()
+    kills = 0
+    rewards.clear()
+    _event_count = 0
+    _last_phase = state.phase
+
+func add_enemy(enemy: ArenaEnemy) -> void:
+    enemies.append(enemy)
+
+func request_event() -> Dictionary:
+    if not pending_event.is_empty() or telegraph.active:
+        return {}
+    pending_event = director.request_next_event()
+    if pending_event.is_empty():
+        return {}
+    telegraph = Telegraph.new(str(pending_event.get("id", "event")), float(pending_event.get("warning_seconds", 1.5)))
+    event_requested.emit(pending_event.duplicate(true))
+    return pending_event.duplicate(true)
+
+func tick(delta: float) -> void:
+    if state.is_result():
+        return
+    var previous := state.phase
+    state.tick(delta)
+    if previous != state.phase:
+        _last_phase = previous
+        phase_changed.emit(previous, state.phase)
+    director.tick(delta)
+    arena.tick(delta)
+    for enemy in enemies:
+        enemy.tick(delta)
+    if not pending_event.is_empty() and telegraph.tick(delta):
+        _resolve_event()
+    if state.phase == MatchState.Phase.CATACLYSM:
+        _apply_cataclysm_pressure()
+    if state.phase == MatchState.Phase.RESULT and rewards.is_empty():
+        _finish()
+
+func _resolve_event() -> void:
+    var resolved := director.resolve_pending_event()
+    _event_count += 1
+    var point := Vector2i((_event_count * 3) % arena.width, (_event_count * 2) % arena.height)
+    if str(resolved.get("mutation", "")) == "destroy_tile":
+        arena.destroy_tile(point.x, point.y)
+    else:
+        arena.add_hazard(str(resolved.get("mutation", "fire_hazard")), 1.0, 2.0)
+        arena.set_tile(point.x, point.y, ArenaState.Tile.FIRE)
+    pending_event.clear()
+    telegraph = Telegraph.new()
+    event_resolved.emit(resolved.duplicate(true))
+
+func _apply_cataclysm_pressure() -> void:
+    var center := Vector2.ZERO
+    for enemy in enemies:
+        if enemy.dead:
+            continue
+        if enemy.position.distance_to(center) > director.cataclysm_radius:
+            var killed := combat.resolve_hero_hit(hero, 1.0, Vector2.ZERO, 0.0)
+            if killed:
+                break
+
+func _finish() -> void:
+    rewards = MatchRewards.calculate(state.elapsed, kills, progression.level, not hero.dead)
+    progression.add_xp(int(rewards.get("xp", 0)))
+    finished.emit(rewards.duplicate(true))
+
+func deal_damage(enemy: ArenaEnemy, amount: float, direction := Vector2.ZERO, knockback := 0.0) -> bool:
+    var killed := combat.resolve_hit(enemy, amount, direction, knockback)
+    if killed:
+        kills += 1
+        progression.add_xp(10)
+    return killed
+
+func result() -> Dictionary:
+    return rewards.duplicate(true)
