@@ -21,11 +21,8 @@ func _init() -> void:
         "war_arena_id": "war_arena_1",
         "ruleset_id": "war_rules_1"
     })
-    _check(ForgeWarDefinitions.is_valid_state("SCHEDULED"), "SCHEDULED must be a valid war state", failures)
-    _check(ForgeWarDefinitions.is_valid_state("PREPARATION"), "PREPARATION must be a valid war state", failures)
-    _check(ForgeWarDefinitions.is_valid_state("ACTIVE"), "ACTIVE must be a valid war state", failures)
-    _check(ForgeWarDefinitions.is_valid_state("FINALIZING"), "FINALIZING must be a valid war state", failures)
-    _check(ForgeWarDefinitions.is_valid_state("COMPLETED"), "COMPLETED must be a valid war state", failures)
+    for state in ["SCHEDULED", "PREPARATION", "ACTIVE", "FINALIZING", "COMPLETED"]:
+        _check(ForgeWarDefinitions.is_valid_state(state), state + " must be a valid war state", failures)
     _check(war["participating_forges"].size() == 3, "Forge War must support multiple participating Forges", failures)
     _check(war.has("individual_contributions") and war.has("forge_trophies") and war.has("ranking") and war.has("rewards"), "Forge War must expose aggregate result contracts", failures)
 
@@ -55,10 +52,10 @@ func _init() -> void:
     var rewards := WarRewardsDefinitions.create()
     _check(rewards.has("placement_rewards") and rewards.has("participation_rewards") and rewards.has("individual_contribution_rewards"), "War Rewards must support multiple reward paths", failures)
     _check(rewards.has("objective_rewards") and rewards.has("forge_rewards"), "War Rewards must support collective and objective rewards", failures)
-    _check(str(rewards["idempotency_key_policy"]) != "", "War Rewards must define idempotency policy", failures)
+    _check(str(rewards["id"]) != "" and str(rewards["idempotency_key_policy"]) != "", "War Rewards must define stable id and idempotency policy", failures)
 
     var season := SeasonDefinitions.create({"id": "season_1", "war_ids": ["war_100"], "special_arena_id": "war_arena_10"})
-    _check(season["war_ids"].size() == 1, "Season must reference multiple future wars", failures)
+    _check(season["war_ids"].size() == 1, "Season must reference wars", failures)
     _check(season.has("ruleset_id") and season.has("rewards_id") and season.has("ranking"), "Season must expose war meta contracts", failures)
 
     var catalog := ContentCatalog.new()
@@ -76,9 +73,6 @@ func _init() -> void:
     _check(catalog.war_rulesets.has("war_rules_1"), "ContentCatalog must register War Ruleset data", failures)
     _check(catalog.war_scoring_rulesets.has("score_1"), "ContentCatalog must register scoring rules", failures)
     _check(catalog.war_contribution_rulesets.has("contrib_1"), "ContentCatalog must register contribution rules", failures)
-    _check(catalog.war_rewards.has(""), "dummy", failures)
-    catalog.war_rewards.erase("")
-    catalog.register_war_rewards(rewards)
     _check(catalog.war_rewards.has(rewards["id"]), "ContentCatalog must register War Rewards by id", failures)
     _check(catalog.seasons.has("season_1"), "ContentCatalog must register Season data", failures)
 
