@@ -10,6 +10,7 @@ Arena Forge é um survivor mobile de partidas curtas em que o jogador controla u
 4. **Habilidade > gasto:** progressão amplia opções; não deve comprar vitória automática.
 5. **Justiça:** eventos de alto impacto são telegrafados; RNG cria contexto e o jogador responde.
 6. **Escala:** conteúdo é data-driven; adicionar cartas, heróis e arenas não exige reescrever o núcleo.
+7. **Comunidade competitiva:** Forjas organizam jogadores e criam competição coletiva sem exigir PvP físico simultâneo em larga escala.
 
 ## Escopos oficiais
 
@@ -36,7 +37,8 @@ Este é o baseline técnico já validado. Ele permanece preservado para regress�
 - Forge/Specialization preparado;
 - eventos e temporadas;
 - competição com Ruleset/Normalization;
-- analytics e live ops preparados para expansão contínua.
+- analytics e live ops preparados para expansão contínua;
+- Forjas e Guerra das Forjas preparadas arquiteturalmente para a camada social/competitiva futura.
 
 25 cards é o mínimo de lançamento, não o limite arquitetural. O núcleo deve aceitar `25 → 40 → 60 → 100+` sem refatoração estrutural e `8 → 10 → 15+` heróis sem mudança de arquitetura.
 
@@ -79,8 +81,52 @@ O contrato de rewards suporta cards, fragments, resources, cosmetics, emotes, ch
 ## Competitivo
 A progressão normal pode carregar níveis. Modos competitivos terão Ruleset configurável com Normalization de hero level, card level e futuras variáveis. Torneios, ligas, matchmaking, leaderboards, replays/ghosts e anti-cheat serão implementados posteriormente.
 
+## Forjas — arquitetura social futura
+**Forja** é a unidade social coletiva própria do Arena Forge. O termo foi escolhido para evitar dependência de nomenclaturas de terceiros e para manter coerência com a identidade de criação/arena do produto.
+
+Uma Forja representa organização de jogadores e possui contrato data-driven para:
+- id, nome, descrição e emblema;
+- membros, líder e officers;
+- nível e troféus;
+- temporada;
+- estatísticas;
+- regras e configuração;
+- histórico.
+
+O contrato não implementa UI social, convites, busca, chat ou persistência de produção.
+
+### Guerra das Forjas
+**Guerra das Forjas** é o evento coletivo competitivo futuro. O modelo é assíncrono/indireto: várias Forjas participam da mesma guerra, cada jogador realiza batalhas individuais e os resultados formam a contribuição coletiva.
+
+Ciclo configurável:
+`SCHEDULED → PREPARATION → ACTIVE → FINALIZING → COMPLETED`.
+
+A configuração inicial preparada é `24h` de preparação + `48h` de guerra ativa, com finalização configurável. O contrato não fixa esses valores como regra de produto.
+
+Fluxo conceitual:
+`MATCH RESULT → INDIVIDUAL WAR CONTRIBUTION → FORGE WAR TROPHIES → WAR RANKING`.
+
+A guerra possui contratos separados para:
+- Forge War;
+- War Arena;
+- War Ruleset;
+- War Scoring Ruleset;
+- War Contribution Ruleset;
+- War Ranking;
+- War Rewards;
+- Season.
+
+War Ruleset pode controlar normalização, restrições, modificadores de arena, frequência de eventos, tentativas/War Energy, objetivos, scoring e rewards. A contribuição suporta limites individuais e coletivos para evitar que participação ilimitada seja a única variável competitiva.
+
+War Arenas são conteúdo próprio, separado das 15 arenas normais, e podem definir terrain, hazards, events, rules, modifiers e objectives.
+
+A arquitetura também prevê idempotência de recompensas, fechamento determinístico, resultado imutável após fechamento e ranking reproduzível. Segurança de produção e anti-exploit completo permanecem futuros.
+
+### Temporadas
+Uma Season pode referenciar várias guerras, rulesets, arena especial, recompensas e ranking. Seasons completas ainda não foram implementadas.
+
 ## Analytics
-O schema de analytics é versionado e extensível. Eventos preparados incluem hero_selected, card_played, card_unused, match_started, match_finished, arena_selected, arena_event_triggered, reward_received, card_unlocked, hero_unlocked, mastery_progressed, deck_configuration, energy_spent, match_duration e result.
+O schema de analytics é versionado e extensível. Eventos preparados incluem hero_selected, card_played, card_unused, match_started, match_finished, arena_selected, arena_event_triggered, reward_received, card_unlocked, hero_unlocked, mastery_progressed, deck_configuration, energy_spent, match_duration, result, forge_created, forge_joined, forge_left, forge_war_joined, forge_war_started, forge_war_battle, forge_war_contribution, forge_war_completed e forge_war_rewarded.
 
 ## Fórmula estratégica
 HERÓI → DECK → BUILD DA PARTIDA → ARENA → EVENTO → SINERGIA → ESTRATÉGIA → HABILIDADE.
