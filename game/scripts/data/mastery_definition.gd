@@ -12,6 +12,7 @@ static func from_dict(value: Dictionary) -> MasteryDefinition:
     result.id = str(value.get("id", ""))
     result.target_type = str(value.get("target_type", ""))
     result.target_id = str(value.get("target_id", ""))
-    result.milestones = value.get("milestones", []).duplicate(true)
+    for milestone in value.get("milestones", []):
+        result.milestones.append(milestone.duplicate(true))
     result.reward_policy = value.get("reward_policy", {}).duplicate(true)
     return result
