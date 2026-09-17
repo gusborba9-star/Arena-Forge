@@ -1,4 +1,6 @@
 extends SceneTree
+const RunnerExit = preload("res://tests/support/runner_exit.gd")
+var failed:Array[String]=[]
 func _init():
  var c=ArenaCard.from_definition(CardDefinitions.initial()[8]);var d=ArenaDeck.new();var a:Array[ArenaCard]=[]
  for i in 8:a.append(c)
@@ -6,6 +8,9 @@ func _init():
  var b=ArenaCard.from_definition(CardDefinitions.initial()[6]);_c(b.cooldown==5,"cooldown");var cards:Array[ArenaCard]=[]
  for i in 8:cards.append(b)
  _c(d.set_deck(cards),"blink deck");r.configure(d);e.configure(10,1.5);_c(r.play(0,e,x,q),"blink first");var v=e.current;_c(not r.play(0,e,x,q) and e.current==v,"blocked");r.tick(5);_c(r.play(0,e,x,q),"ready")
- print("ARENA_FORGE_CARD_GUARDS_OK invalid=2 cooldown=5");quit()
+ if failed.is_empty():
+  RunnerExit.success(self,"ARENA_FORGE_CARD_GUARDS_OK invalid=2 cooldown=5")
+ else:
+  RunnerExit.failure(self,failed)
 func _c(v,m):
- if not v:push_error(m);quit(1)
+ if not v: failed.append(str(m)+" | expected=true | found=false")
