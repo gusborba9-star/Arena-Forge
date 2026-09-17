@@ -1,4 +1,5 @@
 extends SceneTree
+const RunnerExit = preload("res://tests/support/runner_exit.gd")
 
 func _init() -> void:
     var failures: Array[String] = []
@@ -84,11 +85,9 @@ func _init() -> void:
     _check(ForgeWarDefinitions.is_valid_state("INVALID") == false, "invalid war state must be rejected", failures)
 
     if failures.is_empty():
-        print("ARENA_FORGE_FORGE_WAR_FOUNDATION_OK forge=contract war=contract arena=contract rulesets=contract season=contract analytics=9")
-        quit(0)
-    for failure in failures:
-        push_error("FORGE WAR FOUNDATION FAILURE: " + failure)
-    quit(1)
+        RunnerExit.success(self, "ARENA_FORGE_FORGE_WAR_FOUNDATION_OK forge=contract war=contract arena=contract rulesets=contract season=contract analytics=9")
+    failures = failures.map(func(f): return "FORGE WAR FOUNDATION FAILURE: " + f)
+    RunnerExit.failure(self, failures)
 
 func _check(condition: bool, message: String, failures: Array[String]) -> void:
     if not condition:
