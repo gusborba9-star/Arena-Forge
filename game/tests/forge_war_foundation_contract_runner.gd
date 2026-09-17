@@ -86,8 +86,9 @@ func _init() -> void:
 
     if failures.is_empty():
         RunnerExit.success(self, "ARENA_FORGE_FORGE_WAR_FOUNDATION_OK forge=contract war=contract arena=contract rulesets=contract season=contract analytics=9")
-    failures = failures.map(func(f): return "FORGE WAR FOUNDATION FAILURE: " + f)
-    RunnerExit.failure(self, failures)
+    else:
+        failures = failures.map(func(f): return "FORGE WAR FOUNDATION FAILURE: " + f)
+        RunnerExit.failure(self, failures)
 
 func _check(condition: bool, message: String, failures: Array[String]) -> void:
     if not condition:
