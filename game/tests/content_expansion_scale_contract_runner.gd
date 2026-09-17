@@ -1,4 +1,5 @@
 extends SceneTree
+const RunnerExit = preload("res://tests/support/runner_exit.gd")
 
 func _init() -> void:
     var failures: Array[String] = []
@@ -73,12 +74,10 @@ func _init() -> void:
     _assert_engine_has_no_fixture_branches(failures)
 
     if failures.is_empty():
-        print("ARENA_FORGE_CONTENT_EXPANSION_SCALE_OK card=26 hero=9 arena=16 war_arena=2 forge=2 forge_war=100")
-        quit()
+        RunnerExit.success(self, "ARENA_FORGE_CONTENT_EXPANSION_SCALE_OK card=26 hero=9 arena=16 war_arena=2 forge=2 forge_war=100")
         return
-    for failure in failures:
-        push_error("CONTENT EXPANSION SCALE FAILURE: " + failure)
-    quit(1)
+    failures = failures.map(func(f): return "CONTENT EXPANSION SCALE FAILURE: " + f)
+    RunnerExit.failure(self, failures)
 
 func _assert_engine_has_no_fixture_branches(failures: Array[String]) -> void:
     var engine_paths := [
