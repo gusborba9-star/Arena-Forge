@@ -11,7 +11,8 @@ func _init() -> void:
     if failures.is_empty():
         RunnerExit.success(self, "ARENA_FORGE_A1_RUNTIME_OK lifecycle=4 phases events=2 cataclysm=progressive roles=5 combat=xp rewards=result")
     else:
-        failures = failures.map(func(f): return "A1 FAILURE: " + f)
+        for i in failures.size():
+            failures[i] = "A1 FAILURE: " + failures[i]
         RunnerExit.failure(self, failures)
 
 func _check(condition: bool, message: String, failures: Array[String]) -> void:
