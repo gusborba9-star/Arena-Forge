@@ -1,4 +1,5 @@
 extends SceneTree
+const RunnerExit = preload("res://tests/support/runner_exit.gd")
 
 const EXPECTED_RUNTIME_CARDS := 16
 const EXPECTED_RUNTIME_HEROES := 4
@@ -26,13 +27,11 @@ func _init() -> void:
     _validate_cross_contracts(catalog, failures)
 
     if failures.is_empty():
-        print("ARENA_FORGE_CONTENT_FOUNDATION_OK cards=16 validated heroes=4 fixtures arenas=15 launch cards>=25 heroes>=8")
-        quit()
+        RunnerExit.success(self, "ARENA_FORGE_CONTENT_FOUNDATION_OK cards=16 validated heroes=4 fixtures arenas=15 launch cards>=25 heroes>=8")
         return
 
-    for failure in failures:
-        push_error("CONTENT FOUNDATION FAILURE: " + failure)
-    quit(1)
+    failures = failures.map(func(f): return "CONTENT FOUNDATION FAILURE: " + f)
+    RunnerExit.failure(self, failures)
 
 func _validate_cards(cards: Dictionary, failures: Array[String]) -> void:
     for card_id in cards.keys():
