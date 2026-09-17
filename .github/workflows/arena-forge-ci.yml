@@ -37,28 +37,28 @@ jobs:
         shell: bash
         run: |
           set +e
-          godot --headless --path game --script tests/support/runner_exit_pass_contract_runner.gd
+          timeout --preserve-status 30s godot --headless --path game --script tests/support/runner_exit_pass_contract_runner.gd
           pass_code=$?
-          godot --headless --path game --script tests/support/runner_exit_fail_contract_runner.gd
+          timeout --preserve-status 30s godot --headless --path game --script tests/support/runner_exit_fail_contract_runner.gd
           fail_code=$?
           echo "RUNNER_EXIT_CONTRACT pass_exit=$pass_code expected=0 fail_exit=$fail_code expected=1"
           test "$pass_code" -eq 0
           test "$fail_code" -eq 1
       - name: Run engine contracts
-        run: godot --headless --path game --script tests/engine_contract_runner.gd
+        run: timeout --preserve-status 30s godot --headless --path game --script tests/engine_contract_runner.gd
       - name: Run card data contracts
-        run: godot --headless --path game --script tests/card_data_contract_runner.gd
+        run: timeout --preserve-status 30s godot --headless --path game --script tests/card_data_contract_runner.gd
       - name: Run card runtime contracts
-        run: godot --headless --path game --script tests/card_runtime_contract_runner.gd
+        run: timeout --preserve-status 30s godot --headless --path game --script tests/card_runtime_contract_runner.gd
       - name: Run card guard contracts
-        run: godot --headless --path game --script tests/card_guard_contract_runner.gd
+        run: timeout --preserve-status 30s godot --headless --path game --script tests/card_guard_contract_runner.gd
       - name: Run content foundation contracts
-        run: godot --headless --path game --script tests/content_foundation_contract_runner.gd
+        run: timeout --preserve-status 30s godot --headless --path game --script tests/content_foundation_contract_runner.gd
       - name: Run content expansion scale contracts
-        run: godot --headless --path game --script tests/content_expansion_scale_contract_runner.gd
+        run: timeout --preserve-status 30s godot --headless --path game --script tests/content_expansion_scale_contract_runner.gd
       - name: Run Forge War foundation contracts
-        run: godot --headless --path game --script tests/forge_war_foundation_contract_runner.gd
+        run: timeout --preserve-status 30s godot --headless --path game --script tests/forge_war_foundation_contract_runner.gd
       - name: Run A1 runtime contracts
-        run: godot --headless --path game --script tests/a1_runtime_contract_runner.gd
+        run: timeout --preserve-status 30s godot --headless --path game --script tests/a1_runtime_contract_runner.gd
       - name: Run bootstrap smoke contract
-        run: godot --headless --path game --script tests/bootstrap_smoke_runner.gd
+        run: timeout --preserve-status 30s godot --headless --path game --script tests/bootstrap_smoke_runner.gd
