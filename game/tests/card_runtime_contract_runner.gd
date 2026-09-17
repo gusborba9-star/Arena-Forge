@@ -1,10 +1,15 @@
 extends SceneTree
+const RunnerExit = preload("res://tests/support/runner_exit.gd")
+var failed:Array[String]=[]
 func _init():
  var d=CardDefinitions.initial();_check(d.size()==16,"16 cards")
  for z in d:_t(ArenaCard.from_definition(z))
- print("ARENA_FORGE_CARD_RUNTIME_OK cards=16");quit()
+ if failed.is_empty():
+  RunnerExit.success(self,"ARENA_FORGE_CARD_RUNTIME_OK cards=16")
+ else:
+  RunnerExit.failure(self,failed)
 func _check(v,m):
- if not v: push_error(m);quit(1)
+ if not v: failed.append(str(m)+" | expected=true | found=false")
 func _t(c):
  var q=ArenaDeck.new();var a:Array[ArenaCard]=[]
  for i in 8:a.append(c)
