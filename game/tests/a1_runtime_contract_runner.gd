@@ -1,4 +1,5 @@
 extends SceneTree
+const RunnerExit = preload("res://tests/support/runner_exit.gd")
 
 func _init() -> void:
     var failures: Array[String] = []
@@ -8,12 +9,10 @@ func _init() -> void:
     _run_enemy_roles(failures)
     _run_combat_xp_rewards(failures)
     if failures.is_empty():
-        print("ARENA_FORGE_A1_RUNTIME_OK lifecycle=4 phases events=2 cataclysm=progressive roles=5 combat=xp rewards=result")
-        quit(0)
+        RunnerExit.success(self, "ARENA_FORGE_A1_RUNTIME_OK lifecycle=4 phases events=2 cataclysm=progressive roles=5 combat=xp rewards=result")
     else:
-        for failure in failures:
-            push_error("A1 FAILURE: " + failure)
-        quit(1)
+        failures = failures.map(func(f): return "A1 FAILURE: " + f)
+        RunnerExit.failure(self, failures)
 
 func _check(condition: bool, message: String, failures: Array[String]) -> void:
     if not condition:
