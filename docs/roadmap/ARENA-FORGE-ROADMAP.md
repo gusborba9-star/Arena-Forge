@@ -459,7 +459,48 @@ O `main.tscn` instancia diretamente `arena_forge_prototype.gd`; o prototype **n�
 #### Estado formal
 **A2.1: VALIDATED.**
 
-A2 geral permanece **NÃO VALIDADO**. A2.2 não foi iniciada.
+A2 geral permanece **NÃO VALIDADO**. A2.2 está **IMPLEMENTED / VALIDATION PENDING**.
+
+### A2.2 — Command Boundary — 2026-09-18
+
+#### Objetivo
+Estabelecer a primeira fronteira explícita e verificável entre Presentation/Input e o domínio de batalha:
+
+**Presentation/Input → Command → MatchRuntime → State Mutation**
+
+Esta etapa é deliberadamente parcial. O prototype ainda contém responsabilidades legadas de cartas, energia, upgrades, eventos, combate e progressão; essas migrações pertencem aos ciclos posteriores de A2.
+
+#### Implementação
+- Criado `game/scripts/core/match_command.gd` com representação explícita de comando e tipos `INVALID` e `MOVE`.
+- `game/scripts/input/mobile_input.gd` passou a produzir `MatchCommand.move(...)` através de `get_move_command()`.
+- `game/scripts/core/match_runtime.gd` passou a expor `submit_command(command, delta)` como fronteira de autoridade para movimento.
+- O Runtime rejeita comando nulo, partida em RESULT, delta não positivo, tipo desconhecido e vetor de movimento fora do limite; somente comando aceito chama `hero.move()`.
+- Clamp de posição do herói foi mantido dentro do MatchRuntime, removendo a mutação direta correspondente do prototype.
+- `game/scripts/arena_forge_prototype.gd` passou a encaminhar o movimento ao Runtime; não cria uma segunda instância de MatchRuntime.
+- Cartas, CardEffectResolver, energia, upgrades, eventos, combate, progressão, rewards e demais mutações legadas do prototype **não foram migrados nesta etapa**.
+
+#### Contrato de teste
+O `game/tests/bootstrap_smoke_runner.gd` agora verifica:
+- Input gera um comando `MOVE`.
+- Comando inválido é rejeitado.
+- Comando rejeitado não altera a posição do Runtime.
+- Comando válido é aceito e altera o estado pertencente ao Runtime.
+- Comando com direção fora do limite é rejeitado sem mutação.
+- Prototype submete movimento através de `MatchRuntime.submit_command()`.
+- Prototype não chama `hero.move()` diretamente nem aplica diretamente o clamp de posição.
+- O runner emite o marcador `ARENA_FORGE_A2_2_COMMAND_BOUNDARY_OK input=command runtime=authority invalid=rejected state=runtime-owned`.
+
+#### Evidência estática
+- HEAD implementado: `aa8838ce6771edf0608c2901e7f960779437eea5`.
+- Diff contra o último Roadmap validado `84f275b3dc592fdcdd787a1e8cdff80b5ae34206`: somente os arquivos de comando, Runtime, input, prototype e bootstrap foram alterados.
+- Nenhuma alteração em RunnerExit, watchdog, workflow CI, definições de arenas, A1, Hórus, Vercel ou Supabase.
+- Godot local não está disponível nesta sessão; não foi alegado teste local.
+- Nenhuma execução CI foi localizada para o HEAD `aa8838ce6771edf0608c2901e7f960779437eea5` até este registro.
+
+#### Estado formal
+**A2.2: IMPLEMENTED / VALIDATION PENDING.**
+
+A2 geral permanece **NÃO VALIDADO**. A2.3 não foi iniciada.
 
 ## Ordem arquitetural por dependência
 
