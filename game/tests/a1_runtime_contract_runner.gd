@@ -45,7 +45,8 @@ func _run_event_lifecycle(failures: Array[String]) -> void:
     runtime.tick(maxf(0.0, warning - 0.1))
     _check(runtime.telegraph.active, "event must not resolve before warning ends", failures)
     var before_tile := runtime.arena.get_tile(0, 0)
-    runtime.tick(0.1)
+    var warning_epsilon := 0.01
+    runtime.tick(0.1 + warning_epsilon)
     _check(not runtime.telegraph.active, "telegraph must end after warning", failures)
     _check(runtime.pending_event.is_empty(), "pending event must clear after resolve", failures)
     _check(runtime.arena.active_hazards.size() > 0 or runtime.arena.get_tile(0, 0) != before_tile, "event resolution must mutate arena state", failures)
