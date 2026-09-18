@@ -45,6 +45,8 @@ func submit_command(command: MatchCommand, delta: float) -> bool:
             if command.direction.length_squared() > 1.0001:
                 return false
             hero.move(command.direction, delta)
+            hero.position.x = clampf(hero.position.x, 70.0, 1210.0)
+            hero.position.y = clampf(hero.position.y, 70.0, 650.0)
             return true
         _:
             return false
