@@ -29,9 +29,11 @@ var kills := 0
 var event_count := 0
 var rewards := {}
 var runtime_config: Dictionary = {}
+var match_runtime: MatchRuntime = null
 
 func _ready() -> void:
     runtime_config = _load_runtime_config()
+    match_runtime = MatchRuntime.new()
     var match_config: Dictionary = runtime_config.get("match", {})
     energy.configure(float(match_config.get("max_energy", 10.0)), float(match_config.get("energy_regen_interval", 1.5)))
     match_state.configure(float(match_config.get("control_end_seconds", 90.0)), float(match_config.get("cataclysm_start_seconds", 180.0)), float(match_config.get("end_seconds", 240.0)))
@@ -44,7 +46,20 @@ func _ready() -> void:
     upgrade_pool = UpgradeDefinitions.initial()
     var arena_definition := ArenaRuntimeDefinitions.arena_1()
     arena_definition["cataclysm"] = _cataclysm_config()
-    director.configure(arena_definition)
+    match_runtime.configure(
+        arena_definition,
+        float(match_config.get("control_end_seconds", 90.0)),
+        float(match_config.get("cataclysm_start_seconds", 180.0)),
+        float(match_config.get("end_seconds", 240.0))
+    )
+    match_state = match_runtime.state
+    hero = match_runtime.hero
+    arena = match_runtime.arena
+    director = match_runtime.director
+    telegraph = match_runtime.telegraph
+    combat = match_runtime.combat
+    progression = match_runtime.progression
+    enemies = match_runtime.enemies
     var cards: Array[ArenaCard] = []
     var deck_size := int(runtime_config.get("deck", {}).get("size", 8))
     var definitions := CardDefinitions.initial()
@@ -166,6 +181,7 @@ func _spawn_wave() -> void:
     var hp = [40, 32, 95, 22, 140]; var dmg = [8, 6, 12, 4, 18]; var sp = [90, 76, 50, 120, 72]; var ar = [0.5, 0, 2, 0, 5]
     for i in range(5):
         var e := ArenaEnemy.new(); e.configure(roles[i], hp[i], dmg[i], sp[i], ar[i]); e.position = Vector2(180 + i * 230, 120 if i % 2 == 0 else 600); enemies.append(e)
+    match_runtime.enemies = enemies
 
 func _make_upgrades() -> void:
     upgrades.clear()
