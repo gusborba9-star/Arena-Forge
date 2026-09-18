@@ -419,7 +419,7 @@ O `main.tscn` instancia diretamente `arena_forge_prototype.gd`; o prototype **n�
 - Nenhum sistema Hórus/Vercel/Supabase foi alterado.
 
 ### Estado desta etapa
-**A2.1 IMPLEMENTED — VALIDAÇÃO CI PENDENTE.**
+**A2.1 VALIDATED — CI pós-implementação comprovado.**
 
 ### A2.1 — Runtime Instance / Ownership — 2026-09-18
 
@@ -439,11 +439,25 @@ O `main.tscn` instancia diretamente `arena_forge_prototype.gd`; o prototype **n�
 - Commit de implementação: 60db95b1d8fc4d5503a857aa5ba9e65a7b90e009.
 - Commit de testes: 1215fae75c4605f6025c0a1500a511407c3f3134.
 - Correção de ordem de configuração do hero: 39fe3ae4c6c4217fee1b0407649bbb58e3ea1ff9.
-- Diff desde a auditoria A2 (c72712c495bc456141d0170a5d4b8249fe3af8f9) contém somente arena_forge_prototype.gd e bootstrap_smoke_runner.gd.
-- Nenhuma execução CI foi recuperada para 39fe3ae4c6c4217fee1b0407649bbb58e3ea1ff9 neste ciclo; portanto não há Run ID nem marcador CI novo a registrar.
+- SHA validado pelo CI pós-A2.1: `5f24deacd449c6ddf4b4df2f4871cd314530bef9`.
+- CI: **#160** / Run ID `35406732677`.
+- Resultado: **SUCCESS**.
+- Jobs: `validate=SUCCESS`, `godot=SUCCESS`.
+- Runner Exit Contract: `ARENA_FORGE_RUNNER_EXIT_PASS_OK`; `RUNNER_EXIT_CONTRACT pass_exit=0 expected=0 fail_exit=1 expected=1`.
+- Engine: `ARENA_FORGE_ENGINE_CONTRACTS_OK`.
+- Card Data: `ARENA_FORGE_CARD_DATA_OK cards=16`.
+- Card Runtime: `ARENA_FORGE_CARD_RUNTIME_OK cards=16`.
+- Card Guards: `ARENA_FORGE_CARD_GUARDS_OK invalid=2 cooldown=5`.
+- Content Foundation: `ARENA_FORGE_CONTENT_FOUNDATION_OK cards=16 validated heroes=4 fixtures arenas=15 launch cards>=25 heroes>=8`.
+- Expansion Scale: `ARENA_FORGE_CONTENT_EXPANSION_SCALE_OK card=26 hero=9 arena=16 war_arena=2 forge=2 forge_war=100`.
+- Forge War Foundation: `ARENA_FORGE_FORGE_WAR_FOUNDATION_OK forge=contract war=contract arena=contract rulesets=contract season=contract analytics=9`.
+- A1 Runtime: `ARENA_FORGE_A1_RUNTIME_OK lifecycle=4 phases events=2 cataclysm=progressive roles=5 combat=xp rewards=result`.
+- Bootstrap Smoke: `ARENA_FORGE_BOOTSTRAP_SMOKE_OK main_scene=instantiated runtime=owned`.
+- O job Godot terminou com SUCCESS; não houve `SCRIPT ERROR`, `A1 FAILURE`, `context canceled`, timeout do watchdog ou exit code inesperado nos runners. O `ERROR: ARENA_FORGE_RUNNER_EXIT_EXPECTED_FAILURE` pertence exclusivamente ao microteste negativo e foi corretamente capturado como `fail_exit=1`.
+- Nenhuma alteração de produção, workflow, RunnerExit ou watchdog foi necessária para esta validação.
 
 #### Estado formal
-**A2.1: IMPLEMENTED / VALIDATION PENDING.**
+**A2.1: VALIDATED.**
 
 A2 geral permanece **NÃO VALIDADO**. A2.2 não foi iniciada.
 
