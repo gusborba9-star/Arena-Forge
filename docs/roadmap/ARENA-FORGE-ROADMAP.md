@@ -5,13 +5,16 @@ CRIAR → ADAPTAR → EXCLUIR LEGADO → TESTAR → VALIDAR → CORRIGIR → TES
 
 CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado concluído quando houver implementação real, teste comportamental, validação e regressão compatível com o requisito.
 
-## Estado de validação — 2026-09-16
+## Estado de validação — 2026-09-18
 - `16-card validated runtime scope` permanece preservado como baseline técnico.
 - O **Launch Product Target** foi formalizado: 25+ cards, 8+ heroes, 15 arenas, coleção/progressão/mastery/Forge/rewards/eventos/competição/analytics/live ops preparados por contratos.
 - A fundação social/competitiva foi formalmente incorporada: Forja + Guerra das Forjas + War Arena + War Rulesets + scoring/contribution/ranking/rewards + Season linkage.
 - Novos runners foram adicionados para Content Foundation, Forge War Foundation, A1 Runtime, Expansion Scale e bootstrap smoke.
-- **CI #129 / run `35052778615` falhou no job Godot no runner `content_foundation_contract_runner.gd`; Node ficou integralmente verde.** A1 e Expansion Scale não foram validados porque os runners posteriores foram corretamente bloqueados.
-- A correção de `mastery_id` nos 16 cards foi aplicada antes do #129; o runner chegou a imprimir `ARENA_FORGE_CONTENT_FOUNDATION_OK`, mas o processo encerrou com exit code 1. O runner foi endurecido para registrar explicitamente o exit code e falhas futuras.
+- **CI #129 / run `35052778615`** permanece como histórico de falha no job Godot; Node ficou integralmente verde. A1 e Expansion Scale ainda não eram válidos naquele ponto porque os runners posteriores foram bloqueados.
+- A correção de `mastery_id` nos 16 cards foi aplicada antes do #129; o runner chegou a imprimir `ARENA_FORGE_CONTENT_FOUNDATION_OK`, mas o processo encerrou com exit code 1. O runner foi posteriormente endurecido para registrar explicitamente o exit code e falhas futuras.
+- **CI #154 / run `35290216288`**, commit `573efaeb32535cc744dc4d113a192c8aacc6f6fc`, executou o workflow completo com jobs `godot` e `validate` concluídos com SUCCESS. O job Godot executou, em sequência, Runner Exit Contract, Engine, Card Data, Card Runtime, Card Guards, Content Foundation, Expansion Scale, Forge War Foundation, A1 Runtime e Bootstrap Smoke, todos com sucesso.
+- O Run #154 comprovou os marcadores `ARENA_FORGE_RUNNER_EXIT_PASS_OK`, `RUNNER_EXIT_CONTRACT pass_exit=0 expected=0 fail_exit=1 expected=1`, `ARENA_FORGE_ENGINE_CONTRACTS_OK`, `ARENA_FORGE_CARD_DATA_OK cards=16`, `ARENA_FORGE_CARD_RUNTIME_OK cards=16`, `ARENA_FORGE_CARD_GUARDS_OK invalid=2 cooldown=5`, `ARENA_FORGE_CONTENT_FOUNDATION_OK cards=16 validated heroes=4 fixtures arenas=15 launch cards>=25 heroes>=8`, `ARENA_FORGE_CONTENT_EXPANSION_SCALE_OK card=26 hero=9 arena=16 war_arena=2 forge=2 forge_war=100`, `ARENA_FORGE_FORGE_WAR_FOUNDATION_OK forge=contract war=contract arena=contract rulesets=contract season=contract analytics=9`, `ARENA_FORGE_A1_RUNTIME_OK lifecycle=4 phases events=2 cataclysm=progressive roles=5 combat=xp rewards=result` e `ARENA_FORGE_BOOTSTRAP_SMOKE_OK main_scene=instantiated`.
+- A1 foi validado após a correção do runner de fronteira temporal em `573efaeb32535cc744dc4d113a192c8aacc6f6fc`; a execução CI confirmou que o teste termina com sucesso sem `SCRIPT ERROR`, `A1 FAILURE`, `context canceled` ou timeout do watchdog.
 - Expansion Scale foi endurecido para validar pipeline comportamental de Card #26, construção/consumo de Hero #9, processamento de Arena #16 e referências sociais, além de procurar tokens de fixtures nos motores auditados.
 - Auditoria independente de Vercel/Supabase Hórus foi registrada em `docs/audit/HORUS-INFRASTRUCTURE-MIGRATION-AUDIT.md`; nenhuma migração ou alteração de infraestrutura foi executada.
 - A ordem de execução continua sendo determinada por dependências arquiteturais, não pela numeração dos Gates.
@@ -48,10 +51,10 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 - [ ] Papéis de inimigos — IMPLEMENTED; A1 adiciona comportamento verificável dos cinco roles, sujeito à validação CI.
 - [x] Arena tile/state — VALIDATED.
 - [x] Destruição e Abyss — VALIDATED.
-- [ ] Telegraph — IMPLEMENTED; A1 agora testa temporalmente, sujeito à validação CI.
-- [ ] Fases da partida — IMPLEMENTED; A1 agora cobre CONTROL → IGNITION → CATACLYSM → RESULT, sujeito à validação CI.
+- [x] Telegraph — IMPLEMENTED + validado temporalmente pelo A1 no CI #154.
+- [x] Fases da partida — IMPLEMENTED + CONTROL → IGNITION → CATACLYSM → RESULT validados pelo A1 no CI #154.
 
-**Estado:** IMPLEMENTED / VALIDAÇÃO INCOMPLETA até a nova suíte A1 ficar verde no CI.
+**Estado:** IMPLEMENTED / VALIDAÇÃO INCOMPLETA. O contrato A1 agora está validado no CI, mas o Gate 1 como um todo ainda contém itens sem contrato/regressão específica completa.
 
 ## Gate 2 — Cards & Builds
 - [x] Schema de carta data-driven
@@ -68,16 +71,16 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 **Estado:** VALIDATED no escopo `16-card validated runtime scope`. O target de lançamento é 25+ e será expandido por dados, sem reabrir o baseline validado.
 
 ## Gate 3 — Vertical Slice Arena 1
-- [ ] Identidade Arena 1 — IMPLEMENTED + contrato A1, validação CI pendente.
-- [ ] Eventos ambientais telegrafados — IMPLEMENTED + A1 request → telegraph → warning → resolve → mutation, validação CI pendente.
-- [ ] Cataclysm progressivo — IMPLEMENTED + A1 prova raio start > intermediate > end e inside/outside, validação CI pendente.
-- [ ] 5 papéis de inimigos — IMPLEMENTED + A1 prova comportamento distinto, validação CI pendente.
-- [ ] Recompensas determinísticas — IMPLEMENTED + A1 integra MATCH → RESULT → rewards, validação CI pendente.
+- [x] Identidade Arena 1 — IMPLEMENTED + contrato A1, validado no CI #154.
+- [x] Eventos ambientais telegrafados — IMPLEMENTED + A1 request → telegraph → warning → resolve → mutation, validado no CI #154.
+- [x] Cataclysm progressivo — IMPLEMENTED + A1 prova raio start > intermediate > end e inside/outside, validado no CI #154.
+- [x] 5 papéis de inimigos — IMPLEMENTED + A1 prova comportamento distinto, validado no CI #154.
+- [x] Recompensas determinísticas — IMPLEMENTED + A1 integra MATCH → RESULT → rewards, validado no CI #154.
 - [ ] Interações ambientais completas água/eletricidade/óleo/fogo/gelo/vento — NOT STARTED.
 - [ ] UI de batalha de produção — BLOCKED até contrato de estado/eventos estabilizar.
 - [ ] Balanceamento por telemetria — BLOCKED até analytics.
 
-**Estado:** IMPLEMENTED / VALIDAÇÃO A1 PENDENTE.
+**Estado:** IMPLEMENTED / VALIDAÇÃO A1 CONCLUÍDA; vertical slice completo ainda não está fechado porque interações ambientais completas e UI de produção permanecem pendentes.
 
 ## Launch Product Foundation
 - [x] Separação documental `VALIDATED PROTOTYPE SCOPE` vs `LAUNCH PRODUCT TARGET`.
@@ -213,17 +216,19 @@ CI verde é obrigatório, mas não suficiente. Um item só pode ser considerado 
 - `game/tests/forge_war_foundation_contract_runner.gd`
 - `game/tests/bootstrap_smoke_runner.gd`
 
-### Evidência atual
-- CI #129 / run `35052778615`: Node verde; Godot falhou em Content Foundation e bloqueou os runners posteriores.
-- O runner de Expansion Scale não chegou a executar no #129.
-- Após o #129 foram aplicados commits de hardening dos runners e auditoria Hórus; os respectivos commits ainda aguardam execução CI no momento deste registro.
+### Evidência de fechamento
+- Commit: `573efaeb32535cc744dc4d113a192c8aacc6f6fc`.
+- CI: **#154** / Run ID `35290216288`.
+- Resultado: **SUCCESS**.
+- Godot: job concluído com SUCCESS; Runner Exit Contract, Engine, Card Data, Card Runtime, Card Guards, Content Foundation, Expansion Scale, Forge War Foundation, A1 Runtime e Bootstrap Smoke executaram em sequência.
+- A1: `ARENA_FORGE_A1_RUNTIME_OK lifecycle=4 phases events=2 cataclysm=progressive roles=5 combat=xp rewards=result`.
+- Bootstrap: `ARENA_FORGE_BOOTSTRAP_SMOKE_OK main_scene=instantiated`.
+- Não foram encontrados `SCRIPT ERROR`, `A1 FAILURE` ou `context canceled` no log Godot; nenhum runner excedeu o watchdog de 30s.
 
 ### Critério de fechamento
-A1 só será marcado VALIDATED depois de CI Godot 4.4.1 verde com todos os runners, incluindo os marcadores:
-- `ARENA_FORGE_A1_RUNTIME_OK`
-- `ARENA_FORGE_CONTENT_FOUNDATION_OK`
-- `ARENA_FORGE_FORGE_WAR_FOUNDATION_OK`
-- `ARENA_FORGE_BOOTSTRAP_SMOKE_OK`
+A1 exige CI Godot 4.4.1 verde com os contratos comportamentais correspondentes. Esse critério foi satisfeito no CI #154.
+
+**Estado A1:** VALIDATED.
 
 ## Expansion Scale Contract
 
@@ -237,10 +242,10 @@ A1 só será marcado VALIDATED depois de CI Godot 4.4.1 verde com todos os runne
 - WarArena adicional, Forge adicional e ForgeWar adicional são registrados e referenciados por IDs.
 - O runner inspeciona `CardRuntime`, `CardEffectResolver`, `CombatSystem`, `ArenaDirector`, `MatchRuntime`, `ArenaState` e `ForgeWarDefinitions` para impedir tokens de fixtures hardcoded.
 
-**Estado:** IMPLEMENTED / VALIDATION PENDING. Não validado até CI executar e concluir verde.
+**Estado:** VALIDATED. CI #154 comprovou o pipeline de expansão com Card #26, Hero #9, Arena #16, War Arena adicional, Forge adicional e ForgeWar adicional; marcador `ARENA_FORGE_CONTENT_EXPANSION_SCALE_OK card=26 hero=9 arena=16 war_arena=2 forge=2 forge_war=100`.
 
 ## A2 — MatchRuntime como única fonte de verdade
-**BLOCKED até A1 + Expansion Scale VALIDATED.**
+**DESBLOQUEADO PARA REVISÃO.** A1 e Expansion Scale estão VALIDATED pelo CI #154. Nenhuma implementação de A2 é iniciada automaticamente por este registro.
 
 Quando liberado, auditará e consolidará:
 - `arena_forge_prototype.gd`;
@@ -253,7 +258,7 @@ Quando liberado, auditará e consolidará:
 - `MatchProgression`;
 - `MatchRewards`.
 
-Objetivo: eliminar lógica duplicada e garantir uma única autoridade de estado da batalha. Não executar A2 enquanto A1 ou Expansion Scale estiverem apenas IMPLEMENTED/VALIDATION PENDING.
+Objetivo: eliminar lógica duplicada e garantir uma única autoridade de estado da batalha. A2 permanece somente liberado para revisão de escopo; sua implementação depende de revisão/aprovação explícita.
 
 ## Ordem arquitetural por dependência
 
@@ -276,6 +281,13 @@ Objetivo: eliminar lógica duplicada e garantir uma única autoridade de estado 
 A árvore atual do Arena Forge não contém runtime Hórus e a auditoria anterior registrou zero referências textuais residuais. A auditoria externa de infraestrutura confirmou que `velor-api` permanece ligado ao repositório Hórus e que o Supabase `gusborba9-star-Horus-` permanece separado. Nenhuma conexão, deploy, rename ou migração foi executada.
 
 Documento: `docs/audit/HORUS-INFRASTRUCTURE-MIGRATION-AUDIT.md`.
+
+## Regra de sincronização do Roadmap
+Toda criação, alteração estrutural, validação de contrato, correção, teste relevante e mudança de gate deve ser refletida neste Roadmap oficial. Nenhum gate é oficialmente encerrado sem atualização correspondente do Roadmap, e nenhuma nova fase deve ser iniciada sem que o Roadmap reflita corretamente o estado da fase anterior.
+
+Para cada ciclo: consultar o Roadmap → confirmar gates anteriores → definir escopo → implementar após aprovação → testar → validar pelo CI quando aplicável → registrar evidências → atualizar o Roadmap → liberar o próximo gate.
+
+Quando uma etapa falhar, registrar bloqueio, causa, correção e novo teste; só marcar VALIDATED após evidência real. Decisões de arquitetura devem registrar decisão, motivo, impacto/dependências e estado IMPLEMENTADA, PREPARADA, VALIDADA ou PLANEJADA.
 
 ## Regra de avanço
 Nenhum Gate avança por intenção. Cada item exige evidência técnica e funcional compatível com o requisito, registrada no roadmap.
