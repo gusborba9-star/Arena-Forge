@@ -46,7 +46,7 @@ func _init() -> void:
             failures[i] = "BOOTSTRAP FAILURE: " + failures[i]
         RunnerExit.failure(self, failures)
 
-func _run_command_boundary_contract(instance: Node, failures: Array[String]) -> void:
+func _run_command_boundary_contract(instance, failures: Array[String]) -> void:
     var command_input := MobileInput.new()
     command_input.begin_touch(Vector2.ZERO)
     command_input.update_touch(Vector2(45.0, 0.0))
