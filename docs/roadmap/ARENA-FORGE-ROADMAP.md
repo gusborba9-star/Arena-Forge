@@ -245,7 +245,9 @@ A1 exige CI Godot 4.4.1 verde com os contratos comportamentais correspondentes. 
 **Estado:** VALIDATED. CI #154 comprovou o pipeline de expansão com Card #26, Hero #9, Arena #16, War Arena adicional, Forge adicional e ForgeWar adicional; marcador `ARENA_FORGE_CONTENT_EXPANSION_SCALE_OK card=26 hero=9 arena=16 war_arena=2 forge=2 forge_war=100`.
 
 ## A2 — MatchRuntime como única fonte de verdade
-**DESBLOQUEADO PARA REVISÃO.** A1 e Expansion Scale estão VALIDATED pelo CI #154. Nenhuma implementação de A2 é iniciada automaticamente por este registro.
+**AUDIT / CONTRACT DEFINITION — NÃO IMPLEMENTADO.** A2 foi auditado após o fechamento do CI #154. A1, Expansion Scale, Forge War Foundation e Bootstrap permanecem VALIDATED. Nenhuma implementação/refactor de produção A2 foi executada.
+
+Objetivo: eliminar lógica duplicada e garantir uma única autoridade de estado da batalha. A implementação permanece bloqueada até revisão/aprovação explícita do contrato abaixo.
 
 Quando liberado, auditará e consolidará:
 - `arena_forge_prototype.gd`;
@@ -259,6 +261,165 @@ Quando liberado, auditará e consolidará:
 - `MatchRewards`.
 
 Objetivo: eliminar lógica duplicada e garantir uma única autoridade de estado da batalha. A2 permanece somente liberado para revisão de escopo; sua implementação depende de revisão/aprovação explícita.
+
+## A2 — Auditoria arquitetural e contrato proposto — 2026-09-18
+
+### Escopo auditado
+A auditoria percorreu todos os scripts de produção Godot presentes em `game/scripts`, além de `main.tscn`, `project.godot` e os runners A1/Engine/Expansion Scale/Bootstrap relevantes. O inventário de produção inclui:
+
+- `game/scripts/arena_forge_prototype.gd`
+- Core: `match_runtime.gd`, `match_state.gd`, `arena_director.gd`, `telegraph.gd`, `arena_state.gd`, `arena_rules.gd`, `combat.gd`, `progression.gd`, `match_rewards.gd`, `hero.gd`, `enemy.gd`, `energy.gd`, `build_state.gd`, `upgrade_offer.gd`
+- Cards: `card.gd`, `effect.gd`, `card_runtime.gd`, `card_effect_resolver.gd`, `deck.gd`, `cooldown_tracker.gd`
+- Data: definições de hero/card/arena, catálogo/validação, synergy, mastery, progressão, rewards, competitive, live ops, season e fundações Forge/War.
+- Input: `mobile_input.gd`
+- Bootstrap: `game/scenes/main.tscn`, `game/project.godot`
+
+### Descoberta principal
+Existe hoje uma **duplicação estrutural real do estado/simulador de batalha**: `arena_forge_prototype.gd` instancia e muta diretamente `ArenaHero`, `EnergyPool`, `ArenaState`, `CombatSystem`, `MatchState`, `MatchProgression`, `ArenaDeck`, `CardRuntime`, `CardEffectResolver`, `ArenaDirector`, `Telegraph`, `BuildState`, inimigos, `pending_event`, timers, `kills` e `rewards`. Em paralelo, `MatchRuntime` possui suas próprias instâncias de `MatchState`, `ArenaState`, `ArenaDirector`, `Telegraph`, `CombatSystem`, `MatchProgression`, hero, inimigos, `pending_event`, `kills` e `rewards`.
+
+O `main.tscn` instancia diretamente `arena_forge_prototype.gd`; o prototype **não instancia nem delega a simulação ao MatchRuntime**. Portanto, o MatchRuntime atual é uma autoridade isolada usada pelos contratos A1, enquanto o fluxo executado pelo prototype é outro simulador.
+
+### Mapa de duplicações
+| Responsabilidade | Autoridade atual no prototype | MatchRuntime | Duplicação | Destino A2 |
+|---|---|---|---|---|
+| lifecycle/tempo | `match_state` + `_process` | `state.tick` | SIM | Runtime |
+| hero | `hero` | `hero` | SIM | Runtime |
+| inimigos | `enemies` + movimento no prototype | `enemies` + tick no runtime | SIM | Runtime |
+| arena state | `arena` + mutações no prototype/resolver | `arena` + `_resolve_event` | SIM | Runtime |
+| eventos/pending | `director`, `telegraph`, `pending_event`, `_tick_event` | `request_event`, `telegraph`, `pending_event`, `_resolve_event` | SIM | Runtime |
+| cataclysm | `director` + `_cataclysm_damage` | `director` + `_apply_cataclysm_pressure` | SIM | Runtime |
+| combate | `combat` + `_auto_attack/_enemy_attack/_cataclysm_damage` | `combat` + `deal_damage` | SIM | Runtime |
+| kills/XP | `kills`, `progression.add_xp` | `kills`, `progression.add_xp` | SIM | Runtime |
+| result/rewards | `rewards` + cálculo no `_process` | `_finish` + `result` | SIM | Runtime |
+| energia | `energy` | ausência no MatchRuntime | INCONSISTENTE | Runtime |
+| deck/cartas | `deck/runtime/resolver` no prototype | ausência no MatchRuntime | INCONSISTENTE | Runtime via boundary de comando |
+| upgrades/build | `build/upgrades/pending_upgrade` no prototype | ausência no MatchRuntime | INCONSISTENTE | Runtime |
+| timers de ataque/inimigo/cataclysm | variáveis no prototype | ausência equivalente | INCONSISTENTE | Runtime/simulação |
+| input | `MobileInput` + `_input` | nenhum | NÃO É DUPLICAÇÃO | Presentation/Input |
+
+### Ownership proposto
+| Estado/responsabilidade | Dono A2 | Mutação permitida |
+|---|---|---|
+| fase/elapsed | MatchRuntime → MatchState | Runtime |
+| hero/inimigos | MatchRuntime | Runtime/serviços chamados pelo Runtime |
+| arena tiles/hazards | MatchRuntime → ArenaState | Runtime |
+| agenda/cataclysm/eventos | MatchRuntime → ArenaDirector/Telegraph | Runtime |
+| combate | MatchRuntime → CombatSystem | Runtime |
+| kills/XP/level | MatchRuntime → MatchProgression | Runtime |
+| rewards/result | MatchRuntime → MatchRewards | Runtime |
+| energia/deck/hand/cooldown | MatchRuntime → CardRuntime/ArenaDeck/EnergyPool | Runtime |
+| build/upgrades | MatchRuntime → BuildState/UpgradeOffer | Runtime |
+| input/touch | Presentation/Input | somente gerar comandos |
+| renderização | Presentation | somente leitura do estado/runtime |
+| conteúdo/definitions | Data layer | imutável durante a partida |
+
+### Mutações observadas
+- Prototype altera diretamente `match_state`, `energy`, `hero`, `arena`, `progression`, `deck`, `runtime`, `resolver`, `director`, `telegraph`, `build`, `enemies`, `pending_event`, `kills`, `rewards` e timers.
+- `CardEffectResolver` recebe referências externas de hero/enemies/arena e muta esses objetos diretamente.
+- `CombatSystem` muta `ArenaEnemy`/`ArenaHero` diretamente; no estado atual o prototype é quem transforma o retorno de morte em `kills++`/XP, enquanto o MatchRuntime encapsula essa consequência em `deal_damage`.
+- `ArenaDirector` mantém estado de agenda/evento/cataclysm próprio; `MatchRuntime` também mantém `pending_event` e coordena a transição.
+- `ArenaState`, `MatchState`, `Progression` e `MatchRewards` são componentes especializados corretos, mas não devem ser instanciados em paralelo por dois simuladores.
+
+### Fluxos reais
+**Prototype atual:** Input → `_input/_process` → mutações locais → MatchState/Energy/CardRuntime/Resolver/Director/Combat/Progression/ArenaState → desenho.
+
+**Runtime atual (contrato A1):** caller → `MatchRuntime.request_event()`/`tick()`/`deal_damage()` → componentes internos → estado interno → `result()/finished`.
+
+**Evento:** `request_event()` → `ArenaDirector.request_next_event()` → `MatchRuntime.pending_event` + `Telegraph` → `MatchRuntime.tick()` → `Telegraph.tick()` → `_resolve_event()` → `ArenaDirector.resolve_pending_event()` → `ArenaState.destroy_tile/add_hazard/set_tile` → clear pending + reset telegraph → `event_resolved`.
+
+**Prototype mantém rota paralela:** `_tick_event()` chama diretamente `director.request_next_event()`, cria `Telegraph`, chama `director.resolve_pending_event()` e muta `ArenaState`.
+
+**Combate:** prototype → `CombatSystem.resolve_hit/resolve_hero_hit` → entidades; Runtime → `deal_damage()` → `CombatSystem.resolve_hit` → entidade → kill/XP no Runtime.
+
+**Cartas:** prototype → `CardRuntime.play(index, energy, resolver, context)` → `CardEffectResolver.resolve(card, context)` → mutações diretas em hero/enemies/arena ou comandos devolvidos no context → prototype aplica speed/spawn. O MatchRuntime atualmente não possui deck/energy/CardRuntime/resolver integrados.
+
+### Contrato A2 proposto
+**A2.1 Single Authority:** `MatchRuntime` é a única autoridade de estado e simulação da partida.
+
+**A2.2 State Ownership:** todos os objetos de estado da partida são instâncias internas do MatchRuntime; componentes especializados permanecem sem autoridade externa concorrente.
+
+**A2.3 Mutation Rules:** somente MatchRuntime e métodos especializados invocados por ele podem mutar o estado da partida. Presentation/Input não acessa mutações internas.
+
+**A2.4 Command Boundary:** input traduz intenção em comandos explícitos (movimento, jogar carta, seleção de upgrade, etc.) consumidos pelo MatchRuntime.
+
+**A2.5 Read Boundary:** presentation lê snapshots/estado exposto pelo MatchRuntime; não mantém cópias mutáveis de estado de batalha.
+
+**A2.6 Card Boundary:** CardRuntime/Resolver tornam-se mecanismos de execução pertencentes ao MatchRuntime. O resolver não recebe um grafo arbitrário de objetos do presentation; recebe contexto/handles controlados pelo Runtime e retorna/solicita mutações através da autoridade do Runtime.
+
+**A2.7 Event Boundary:** request, telegraph, warning, resolve e mutation passam por MatchRuntime. ArenaDirector/Telegraph são componentes especializados sem segunda fila de eventos concorrente no presentation.
+
+**A2.8 Combat Boundary:** ataques, dano, armor, knockback, morte, kills e XP entram por comandos/serviços coordenados pelo MatchRuntime. Não haverá rota presentation → CombatSystem concorrente.
+
+**A2.9 Result Boundary:** somente MatchRuntime finaliza RESULT, calcula/retém rewards e expõe o resultado final.
+
+**A2.10 Determinism:** estado inicial + sequência ordenada de comandos + deltas de tempo definidos devem produzir o mesmo estado. Não introduzir relógios globais, aleatoriedade não controlada ou mutações externas.
+
+### Inconsistências documentais
+1. Roadmap usa nomes conceituais `MatchProgression` e `CombatSystem`; arquivos reais são `game/scripts/core/progression.gd` e `game/scripts/core/combat.gd`.
+2. Roadmap descreve `MatchRuntime` como contrato determinístico já introduzido no A1, mas o bootstrap atual instancia diretamente `arena_forge_prototype.gd`, que contém o simulador paralelo. O contrato A1 existe e é validado isoladamente; a integração do produto ainda não ocorreu.
+3. Roadmap lista energia, deck/cartas e upgrades como partes do core, mas MatchRuntime ainda não os possui; esses estados permanecem no prototype.
+4. Roadmap chama a fase A2 de “única fonte de verdade”, coerente como objetivo futuro, mas não como estado atual. Esta auditoria corrige a leitura: A2 está em AUDIT / CONTRACT DEFINITION, não IMPLEMENTED.
+
+### Plano de migração — não executado
+1. preservar baseline A1;
+2. estabelecer ownership e API de comandos/leitura;
+3. migrar estado para MatchRuntime;
+4. migrar mutações e integrar energia/deck/build;
+5. transformar prototype em presentation/input;
+6. integrar cards;
+7. integrar eventos;
+8. integrar combate;
+9. integrar progressão/rewards;
+10. remover duplicações e impedir acesso mutável paralelo;
+11. adicionar contrato A2 e testes de anti-duplicação;
+12. regressão A1 + Expansion Scale + Bootstrap;
+13. CI completo.
+
+### Critérios de aceitação A2
+- uma única autoridade de estado da batalha;
+- prototype sem estado paralelo de batalha;
+- prototype sem segunda simulação;
+- eventos passando pela autoridade única;
+- combate passando pela autoridade única;
+- progressão passando pela autoridade única;
+- rewards passando pela autoridade única;
+- cartas sem estado paralelo;
+- A1 verde;
+- Expansion Scale verde;
+- Bootstrap verde;
+- comportamento previamente validado preservado.
+
+### Testes A2 propostos
+- **Single-runtime integration:** bootstrap cria um único MatchRuntime como dono do estado.
+- **Prototype no-simulation contract:** inspeção estrutural impede `MatchState.new`, `ArenaState.new`, `ArenaDirector.new`, `CombatSystem.new`, `CardRuntime.new`, `ArenaDeck.new`, `MatchProgression.new` e mutações de estado de batalha no presentation.
+- **Command/read boundary:** comandos alteram o Runtime; presentation apenas lê resultados.
+- **Event authority:** request → telegraph → resolve → mutation ocorre uma única vez e somente via Runtime.
+- **Combat authority:** uma morte gera exatamente uma mutação de kill/XP pelo Runtime.
+- **Card authority:** play/cooldown/energy/draw/effects não mantêm cópia paralela fora do Runtime.
+- **Result authority:** RESULT/rewards são finalizados uma única vez.
+- **Deterministic replay:** mesma configuração + comandos + deltas produz snapshots equivalentes.
+- **Negative duplication guard:** fixture/branch de segundo simulador deve falhar o contrato.
+- Reexecutar A1, Expansion Scale e Bootstrap após a migração.
+
+### Riscos
+- regressão do bootstrap ao retirar o motor do prototype;
+- duplicação temporária durante a migração;
+- mudança acidental da semântica de cartas;
+- alteração de timing de eventos/cataclysm;
+- mudança de ordem de kills/XP/rewards;
+- exposição de estado mutável à UI;
+- risco de tornar MatchRuntime excessivamente grande. Mitigação: manter componentes especializados (`ArenaState`, `ArenaDirector`, `CombatSystem`, etc.) como serviços/componentes do Runtime, sem criar framework adicional.
+
+### Impacto sobre gates validados
+- **A1:** baseline permanece VALIDATED; nenhuma alteração foi feita.
+- **Expansion Scale:** permanece VALIDATED; nenhuma alteração foi feita.
+- **Forge War Foundation:** permanece VALIDATED; nenhum código social foi alterado.
+- **Bootstrap Smoke:** permanece VALIDATED pelo CI #154; deverá ser reexecutado após qualquer migração A2.
+- **A2:** NÃO VALIDATED e NÃO IMPLEMENTED; somente AUDIT / CONTRACT DEFINITION.
+- Nenhum sistema Hórus/Vercel/Supabase foi alterado.
+
+### Estado desta etapa
+**AUDITORIA CONCLUÍDA — CONTRATO A2 PROPOSTO — IMPLEMENTAÇÃO NÃO INICIADA.**
 
 ## Ordem arquitetural por dependência
 
