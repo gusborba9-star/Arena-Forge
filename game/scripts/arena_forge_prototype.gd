@@ -133,8 +133,6 @@ func _move_hero(delta: float) -> void:
     if command.direction == Vector2.ZERO:
         command = MatchCommand.move(Input.get_vector("ui_left", "ui_right", "ui_up", "ui_down"))
     match_runtime.submit_command(command, delta)
-    hero.position.x = clampf(hero.position.x, 70, 1210)
-    hero.position.y = clampf(hero.position.y, 70, 650)
 
 func _move_enemies(delta: float) -> void:
     for e in enemies:
