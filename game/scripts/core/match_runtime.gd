@@ -37,6 +37,18 @@ func configure(arena_definition: Dictionary, control_end := 90.0, cataclysm_star
 func add_enemy(enemy: ArenaEnemy) -> void:
     enemies.append(enemy)
 
+func submit_command(command: MatchCommand, delta: float) -> bool:
+    if command == null or state.is_result() or delta <= 0.0:
+        return false
+    match command.type:
+        MatchCommand.Type.MOVE:
+            if command.direction.length_squared() > 1.0001:
+                return false
+            hero.move(command.direction, delta)
+            return true
+        _:
+            return false
+
 func request_event() -> Dictionary:
     if not pending_event.is_empty() or telegraph.active:
         return {}
