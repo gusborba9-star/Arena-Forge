@@ -419,7 +419,33 @@ O `main.tscn` instancia diretamente `arena_forge_prototype.gd`; o prototype **n�
 - Nenhum sistema Hórus/Vercel/Supabase foi alterado.
 
 ### Estado desta etapa
-**AUDITORIA CONCLUÍDA — CONTRATO A2 PROPOSTO — IMPLEMENTAÇÃO NÃO INICIADA.**
+**A2.1 IMPLEMENTED — VALIDAÇÃO CI PENDENTE.**
+
+### A2.1 — Runtime Instance / Ownership — 2026-09-18
+
+#### Implementação
+- game/scripts/arena_forge_prototype.gd agora cria exatamente uma instância executável de MatchRuntime.
+- O Runtime é configurado com a definição da Arena 1 e os tempos de partida provenientes da configuração existente.
+- O prototype passa a referenciar as instâncias oficiais de MatchState, ArenaHero, ArenaState, ArenaDirector, CombatSystem, MatchProgression e enemies pertencentes ao MatchRuntime.
+- O comportamento legado de cartas, energia, upgrades, input e demais responsabilidades ainda não migradas permanece no prototype nesta etapa.
+- Não houve alteração em MatchRuntime, RunnerExit, A1, watchdog, workflow, definições de arenas ou infraestrutura externa.
+
+#### Testes
+- game/tests/bootstrap_smoke_runner.gd foi adaptado para verificar existência do MatchRuntime no fluxo executável, configuração do Runtime, identidade compartilhada entre Runtime e referências do prototype, estado de Arena inicializado e exatamente uma ocorrência construtora de MatchRuntime.new() no prototype.
+- A1 não foi alterado.
+- Teste Godot local não foi executado nesta sessão; validação estática foi realizada.
+
+#### Evidência
+- Commit de implementação: 60db95b1d8fc4d5503a857aa5ba9e65a7b90e009.
+- Commit de testes: 1215fae75c4605f6025c0a1500a511407c3f3134.
+- Correção de ordem de configuração do hero: 39fe3ae4c6c4217fee1b0407649bbb58e3ea1ff9.
+- Diff desde a auditoria A2 (c72712c495bc456141d0170a5d4b8249fe3af8f9) contém somente arena_forge_prototype.gd e bootstrap_smoke_runner.gd.
+- Nenhuma execução CI foi recuperada para 39fe3ae4c6c4217fee1b0407649bbb58e3ea1ff9 neste ciclo; portanto não há Run ID nem marcador CI novo a registrar.
+
+#### Estado formal
+**A2.1: IMPLEMENTED / VALIDATION PENDING.**
+
+A2 geral permanece **NÃO VALIDADO**. A2.2 não foi iniciada.
 
 ## Ordem arquitetural por dependência
 
