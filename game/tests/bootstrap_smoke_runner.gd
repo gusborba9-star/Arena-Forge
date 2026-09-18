@@ -28,6 +28,8 @@ func _init() -> void:
     _check(instance.match_runtime.state.end_seconds == 240.0, "MatchRuntime result timing must be configured", failures)
     _check(instance.match_runtime.arena.width == 12 and instance.match_runtime.arena.height == 7, "MatchRuntime arena state must be initialized", failures)
 
+    _run_command_boundary_contract(instance, failures)
+
     var prototype_source := FileAccess.open("res://scripts/arena_forge_prototype.gd", FileAccess.READ)
     if prototype_source == null:
         failures.append("prototype source must be readable for ownership guard")
@@ -43,6 +45,37 @@ func _init() -> void:
         for i in failures.size():
             failures[i] = "BOOTSTRAP FAILURE: " + failures[i]
         RunnerExit.failure(self, failures)
+
+func _run_command_boundary_contract(instance: Node, failures: Array[String]) -> void:
+    var command_input := MobileInput.new()
+    command_input.begin_touch(Vector2.ZERO)
+    command_input.update_touch(Vector2(45.0, 0.0))
+    var move_command := command_input.get_move_command()
+    _check(move_command.type == MatchCommand.Type.MOVE, "input must create MOVE command", failures)
+
+    var before := instance.match_runtime.hero.position
+    _check(not instance.match_runtime.submit_command(MatchCommand.invalid(), 0.1), "invalid command must be rejected", failures)
+    _check(instance.match_runtime.hero.position == before, "rejected command must not mutate runtime state", failures)
+
+    _check(instance.match_runtime.submit_command(move_command, 0.1), "valid command must be accepted by Runtime", failures)
+    _check(instance.match_runtime.hero.position != before, "accepted command must mutate runtime-owned state", failures)
+
+    var after_valid := instance.match_runtime.hero.position
+    var invalid_direction := MatchCommand.move(Vector2(2.0, 0.0))
+    _check(not instance.match_runtime.submit_command(invalid_direction, 0.1), "out-of-range command must be rejected", failures)
+    _check(instance.match_runtime.hero.position == after_valid, "rejected direction must not mutate runtime state", failures)
+
+    var prototype_source := FileAccess.open("res://scripts/arena_forge_prototype.gd", FileAccess.READ)
+    if prototype_source == null:
+        failures.append("prototype source must be readable for command-boundary guard")
+        return
+    var source_text := prototype_source.get_as_text()
+    _check(source_text.contains("match_runtime.submit_command(command, delta)"), "prototype must submit movement through MatchRuntime", failures)
+    _check(not source_text.contains("hero.move("), "prototype must not mutate hero movement directly", failures)
+    _check(not source_text.contains("hero.position.x = clampf"), "prototype must not clamp runtime hero state directly", failures)
+    _check(not source_text.contains("hero.position.y = clampf"), "prototype must not clamp runtime hero state directly", failures)
+
+    print("ARENA_FORGE_A2_2_COMMAND_BOUNDARY_OK input=command runtime=authority invalid=rejected state=runtime-owned")
 
 func _check(condition: bool, message: String, failures: Array[String]) -> void:
     if not condition:
