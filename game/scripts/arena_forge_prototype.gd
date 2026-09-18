@@ -36,10 +36,6 @@ func _ready() -> void:
     match_runtime = MatchRuntime.new()
     var match_config: Dictionary = runtime_config.get("match", {})
     energy.configure(float(match_config.get("max_energy", 10.0)), float(match_config.get("energy_regen_interval", 1.5)))
-    match_state.configure(float(match_config.get("control_end_seconds", 90.0)), float(match_config.get("cataclysm_start_seconds", 180.0)), float(match_config.get("end_seconds", 240.0)))
-    hero.configure(HeroDefinitions.initial()[2])
-    hero.position = Vector2(640, 360)
-    base_speed = hero.speed
     for h in HeroDefinitions.initial(): catalog.register_hero(h)
     for c in CardDefinitions.initial(): catalog.register_card(c)
     for a in ArenaDefinitions.initial(): catalog.register_arena(a)
@@ -60,6 +56,9 @@ func _ready() -> void:
     combat = match_runtime.combat
     progression = match_runtime.progression
     enemies = match_runtime.enemies
+    hero.configure(HeroDefinitions.initial()[2])
+    hero.position = Vector2(640, 360)
+    base_speed = hero.speed
     var cards: Array[ArenaCard] = []
     var deck_size := int(runtime_config.get("deck", {}).get("size", 8))
     var definitions := CardDefinitions.initial()
