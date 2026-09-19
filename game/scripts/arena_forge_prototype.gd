@@ -48,6 +48,8 @@ func _ready() -> void:
         float(match_config.get("cataclysm_start_seconds", 180.0)),
         float(match_config.get("end_seconds", 240.0))
     )
+    match_runtime.card_play_requested.connect(_play_card)
+    match_runtime.upgrade_selection_requested.connect(_select_upgrade)
     match_state = match_runtime.state
     hero = match_runtime.hero
     arena = match_runtime.arena
@@ -91,12 +93,12 @@ func _cataclysm_config() -> Dictionary:
 func _input(event: InputEvent) -> void:
     if event is InputEventScreenTouch:
         if event.pressed and event.position.x < 500: input.begin_touch(event.position)
-        elif event.pressed: _play_card(int((event.position.x - 560) / 170.0))
+        elif event.pressed: match_runtime.submit_command(MatchCommand.play_card(int((event.position.x - 560) / 170.0)), 0.0)
         else: input.end_touch()
     elif event is InputEventScreenDrag and input.touch_active: input.update_touch(event.position)
     elif event is InputEventKey and event.pressed:
-        if pending_upgrade and event.keycode >= KEY_1 and event.keycode <= KEY_3: _select_upgrade(event.keycode - KEY_1)
-        elif event.keycode >= KEY_1 and event.keycode <= KEY_4: _play_card(event.keycode - KEY_1)
+        if pending_upgrade and event.keycode >= KEY_1 and event.keycode <= KEY_3: match_runtime.submit_command(MatchCommand.select_upgrade(event.keycode - KEY_1), 0.0)
+        elif event.keycode >= KEY_1 and event.keycode <= KEY_4: match_runtime.submit_command(MatchCommand.play_card(event.keycode - KEY_1), 0.0)
 
 func _process(delta: float) -> void:
     if hero.dead or match_state.is_result():

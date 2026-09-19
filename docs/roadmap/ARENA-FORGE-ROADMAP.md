@@ -582,6 +582,32 @@ Fechar a primeira camada verificável de regras de mutação: Presentation/Input
 A2 geral permanece **NÃO VALIDADO**. A2.4 permanece **NÃO INICIADA**.
 
 
+### A2.4 — Command Boundary — 2026-09-19
+
+#### Objetivo
+Ampliar a fronteira explícita de comandos além do movimento, fazendo Input/Presentation traduzir intenção de carta e upgrade em comandos consumidos pelo MatchRuntime, sem antecipar a migração de execução de cards/upgrades para o domínio Runtime.
+
+#### Implementação
+- `MatchCommand` agora possui `MOVE`, `PLAY_CARD` e `SELECT_UPGRADE`, com índices explícitos para carta/upgrade.
+- `MatchRuntime.submit_command()` valida e consome os novos comandos; comandos válidos de carta/upgrade são encaminhados por sinais de domínio para a execução legada existente.
+- `arena_forge_prototype.gd` deixou de chamar diretamente `_play_card()` e `_select_upgrade()` a partir do input; o input produz comandos e o Runtime os consome.
+- A execução interna legada de cards/upgrades permanece fora do Runtime por decisão de escopo; sua migração pertence às etapas posteriores de A2.
+- Não foram alterados A1, Runner Exit, watchdog, workflow, infraestrutura, combate, eventos, progressão, rewards ou UI de produção.
+
+#### Contrato de teste
+- MOVE continua passando por `MatchCommand → MatchRuntime`.
+- `PLAY_CARD` válido é aceito pelo Runtime e gera solicitação autorizada.
+- `SELECT_UPGRADE` válido é aceito pelo Runtime e gera solicitação autorizada.
+- índices negativos são rejeitados sem emissão.
+- Input contém criação dos novos comandos e não possui chamadas diretas `_play_card()`/`_select_upgrade()`.
+- Marcador previsto: `ARENA_FORGE_A2_4_COMMAND_BOUNDARY_OK commands=move,play_card,select_upgrade runtime=consumer invalid=rejected`.
+
+#### Estado provisório
+**A2.4: IMPLEMENTED / VALIDATION PENDING.**
+
+A2 geral permanece **NÃO VALIDADO**. A2.5 permanece **NÃO INICIADA**.
+
+
 ## Ordem arquitetural por dependência
 
 1. **A1 — Arena 1 Runtime Hardening + Battle-State Contract**

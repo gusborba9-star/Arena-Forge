@@ -5,6 +5,8 @@ signal phase_changed(previous: MatchState.Phase, current: MatchState.Phase)
 signal event_requested(event: Dictionary)
 signal event_resolved(event: Dictionary)
 signal finished(rewards: Dictionary)
+signal card_play_requested(index: int)
+signal upgrade_selection_requested(index: int)
 
 var state := MatchState.new()
 var arena := ArenaState.new()
@@ -38,15 +40,25 @@ func add_enemy(enemy: ArenaEnemy) -> void:
     enemies.append(enemy)
 
 func submit_command(command: MatchCommand, delta: float) -> bool:
-    if command == null or state.is_result() or delta <= 0.0:
+    if command == null or state.is_result() or delta < 0.0:
         return false
     match command.type:
         MatchCommand.Type.MOVE:
-            if command.direction.length_squared() > 1.0001:
+            if delta <= 0.0 or command.direction.length_squared() > 1.0001:
                 return false
             hero.move(command.direction, delta)
             hero.position.x = clampf(hero.position.x, 70.0, 1210.0)
             hero.position.y = clampf(hero.position.y, 70.0, 650.0)
+            return true
+        MatchCommand.Type.PLAY_CARD:
+            if command.index < 0:
+                return false
+            card_play_requested.emit(command.index)
+            return true
+        MatchCommand.Type.SELECT_UPGRADE:
+            if command.index < 0:
+                return false
+            upgrade_selection_requested.emit(command.index)
             return true
         _:
             return false

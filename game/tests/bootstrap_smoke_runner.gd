@@ -1,4 +1,7 @@
 extends SceneTree
+
+var received_card_command := -1
+var received_upgrade_command := -1
 const RunnerExit = preload("res://tests/support/runner_exit.gd")
 
 func _init() -> void:
@@ -30,6 +33,7 @@ func _init() -> void:
 
     _run_command_boundary_contract(instance, failures)
     _run_mutation_rules_contract(instance, failures)
+    _run_extended_command_boundary_contract(instance, failures)
 
     var prototype_source := FileAccess.open("res://scripts/arena_forge_prototype.gd", FileAccess.READ)
     if prototype_source == null:
@@ -77,6 +81,44 @@ func _run_command_boundary_contract(instance, failures: Array[String]) -> void:
     _check(not source_text.contains("hero.position.y = clampf"), "prototype must not clamp runtime hero state directly", failures)
 
     print("ARENA_FORGE_A2_2_COMMAND_BOUNDARY_OK input=command runtime=authority invalid=rejected state=runtime-owned")
+
+func _run_extended_command_boundary_contract(instance, failures: Array[String]) -> void:
+    received_card_command = -1
+    received_upgrade_command = -1
+    instance.match_runtime.card_play_requested.connect(_on_card_command)
+    instance.match_runtime.upgrade_selection_requested.connect(_on_upgrade_command)
+
+    _check(instance.match_runtime.submit_command(MatchCommand.play_card(999), 0.0), "PLAY_CARD command must be accepted by Runtime", failures)
+    _check(received_card_command == 999, "Runtime must consume PLAY_CARD intent and emit authorized request", failures)
+
+    _check(not instance.match_runtime.submit_command(MatchCommand.play_card(-1), 0.0), "invalid PLAY_CARD command must be rejected", failures)
+    _check(received_card_command == 999, "rejected PLAY_CARD command must not emit a request", failures)
+
+    _check(instance.match_runtime.submit_command(MatchCommand.select_upgrade(999), 0.0), "SELECT_UPGRADE command must be accepted by Runtime", failures)
+    _check(received_upgrade_command == 999, "Runtime must consume SELECT_UPGRADE intent and emit authorized request", failures)
+
+    _check(not instance.match_runtime.submit_command(MatchCommand.select_upgrade(-1), 0.0), "invalid SELECT_UPGRADE command must be rejected", failures)
+    _check(received_upgrade_command == 999, "rejected SELECT_UPGRADE command must not emit a request", failures)
+
+    var prototype_source := FileAccess.open("res://scripts/arena_forge_prototype.gd", FileAccess.READ)
+    if prototype_source == null:
+        failures.append("prototype source must be readable for extended command-boundary guard")
+        return
+    var source_text := prototype_source.get_as_text()
+    _check(source_text.contains("MatchCommand.play_card("), "prototype input must create PLAY_CARD commands", failures)
+    _check(source_text.contains("MatchCommand.select_upgrade("), "prototype input must create SELECT_UPGRADE commands", failures)
+    _check(source_text.contains("match_runtime.card_play_requested.connect(_play_card)"), "legacy card execution must be downstream of Runtime command consumption", failures)
+    _check(source_text.contains("match_runtime.upgrade_selection_requested.connect(_select_upgrade)"), "legacy upgrade execution must be downstream of Runtime command consumption", failures)
+    _check(not source_text.contains(": _play_card("), "input must not bypass Runtime with direct card execution", failures)
+    _check(not source_text.contains(": _select_upgrade("), "input must not bypass Runtime with direct upgrade execution", failures)
+
+    print("ARENA_FORGE_A2_4_COMMAND_BOUNDARY_OK commands=move,play_card,select_upgrade runtime=consumer invalid=rejected")
+
+func _on_card_command(index: int) -> void:
+    received_card_command = index
+
+func _on_upgrade_command(index: int) -> void:
+    received_upgrade_command = index
 
 func _run_mutation_rules_contract(instance, failures: Array[String]) -> void:
     var prototype_source := FileAccess.open("res://scripts/arena_forge_prototype.gd", FileAccess.READ)
