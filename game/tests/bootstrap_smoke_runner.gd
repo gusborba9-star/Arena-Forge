@@ -53,14 +53,14 @@ func _run_command_boundary_contract(instance, failures: Array[String]) -> void:
     var move_command := command_input.get_move_command()
     _check(move_command.type == MatchCommand.Type.MOVE, "input must create MOVE command", failures)
 
-    var before := instance.match_runtime.hero.position
+    var before: Vector2 = instance.match_runtime.hero.position
     _check(not instance.match_runtime.submit_command(MatchCommand.invalid(), 0.1), "invalid command must be rejected", failures)
     _check(instance.match_runtime.hero.position == before, "rejected command must not mutate runtime state", failures)
 
     _check(instance.match_runtime.submit_command(move_command, 0.1), "valid command must be accepted by Runtime", failures)
     _check(instance.match_runtime.hero.position != before, "accepted command must mutate runtime-owned state", failures)
 
-    var after_valid := instance.match_runtime.hero.position
+    var after_valid: Vector2 = instance.match_runtime.hero.position
     var invalid_direction := MatchCommand.move(Vector2(2.0, 0.0))
     _check(not instance.match_runtime.submit_command(invalid_direction, 0.1), "out-of-range command must be rejected", failures)
     _check(instance.match_runtime.hero.position == after_valid, "rejected direction must not mutate runtime state", failures)
