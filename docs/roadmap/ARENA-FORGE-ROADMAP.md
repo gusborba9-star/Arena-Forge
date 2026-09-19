@@ -500,6 +500,7 @@ O `game/tests/bootstrap_smoke_runner.gd` agora verifica:
 #### CI validation trigger
 - Commit documental de auditoria criado somente para disparar o workflow existente via `push`; nenhuma implementação A2.2, RunnerExit, watchdog ou workflow foi alterada.
 - A execução resultante será considerada a evidência de validação apenas se todos os critérios A2.2 forem comprovados nos jobs e logs.
+- Este commit é exclusivo para o gatilho `pull_request`; o código funcional permanece byte-a-byte equivalente ao HEAD `280e762d…`.
 
 #### Estado formal
 **A2.2: IMPLEMENTED / VALIDATION PENDING.**
