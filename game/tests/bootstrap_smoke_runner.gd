@@ -174,7 +174,9 @@ func _run_read_boundary_contract(instance, failures: Array[String]) -> void:
     _check(draw_start >= 0, "prototype must contain presentation draw function", failures)
     if draw_start < 0:
         return
-    var draw_source := source_text.substr(draw_start)
+    var draw_end := source_text.find("func _read_presentation_snapshot() -> MatchReadSnapshot", draw_start)
+    _check(draw_end > draw_start, "prototype must isolate snapshot adapter from presentation draw", failures)
+    var draw_source := source_text.substr(draw_start, draw_end - draw_start)
     var forbidden_reads := [
         "hero.position",
         "hero.hp",
