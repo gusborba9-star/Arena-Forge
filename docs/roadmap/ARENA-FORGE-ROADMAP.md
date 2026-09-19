@@ -475,12 +475,12 @@ Esta etapa é deliberadamente parcial. O prototype ainda contém responsabilidad
 - `game/scripts/input/mobile_input.gd` passou a produzir `MatchCommand.move(...)` através de `get_move_command()`.
 - `game/scripts/core/match_runtime.gd` passou a expor `submit_command(command, delta)` como fronteira de autoridade para movimento.
 - O Runtime rejeita comando nulo, partida em RESULT, delta não positivo, tipo desconhecido e vetor de movimento fora do limite; somente comando aceito chama `hero.move()`.
-- Clamp de posição do herói foi mantido dentro do MatchRuntime, removendo a mutação direta correspondente do prototype.
-- `game/scripts/arena_forge_prototype.gd` passou a encaminhar o movimento ao Runtime; não cria uma segunda instância de MatchRuntime.
-- Cartas, CardEffectResolver, energia, upgrades, eventos, combate, progressão, rewards e demais mutações legadas do prototype **não foram migrados nesta etapa**.
+- Clamp de posição do herói permanece dentro do MatchRuntime; o prototype não aplica mais essa mutação.
+- `game/scripts/arena_forge_prototype.gd` encaminha o movimento ao Runtime e mantém uma única instância de MatchRuntime.
+- Cartas, CardEffectResolver, energia, upgrades, eventos, combate, progressão, rewards e demais mutações legadas do prototype não foram migrados nesta etapa.
 
 #### Contrato de teste
-O `game/tests/bootstrap_smoke_runner.gd` agora verifica:
+O `game/tests/bootstrap_smoke_runner.gd` verifica:
 - Input gera um comando `MOVE`.
 - Comando inválido é rejeitado.
 - Comando rejeitado não altera a posição do Runtime.
@@ -488,24 +488,50 @@ O `game/tests/bootstrap_smoke_runner.gd` agora verifica:
 - Comando com direção fora do limite é rejeitado sem mutação.
 - Prototype submete movimento através de `MatchRuntime.submit_command()`.
 - Prototype não chama `hero.move()` diretamente nem aplica diretamente o clamp de posição.
-- O runner emite o marcador `ARENA_FORGE_A2_2_COMMAND_BOUNDARY_OK input=command runtime=authority invalid=rejected state=runtime-owned`.
+- O runner emite `ARENA_FORGE_A2_2_COMMAND_BOUNDARY_OK input=command runtime=authority invalid=rejected state=runtime-owned`.
 
-#### Evidência estática
-- HEAD implementado: `aa8838ce6771edf0608c2901e7f960779437eea5`.
-- Diff contra o último Roadmap validado `84f275b3dc592fdcdd787a1e8cdff80b5ae34206`: somente os arquivos de comando, Runtime, input, prototype e bootstrap foram alterados.
-- Nenhuma alteração em RunnerExit, watchdog, workflow CI, definições de arenas, A1, Hórus, Vercel ou Supabase.
-- Godot local não está disponível nesta sessão; não foi alegado teste local.
-- Nenhuma execução CI foi localizada para o HEAD `aa8838ce6771edf0608c2901e7f960779437eea5` até este registro.
+#### Correção durante validação
+- **CI #174 / Run ID `35408068267`**: `validate=SUCCESS`; o job `godot` executou todos os contratos anteriores com sucesso, mas o Bootstrap Smoke falhou por tipagem estrita do Godot em duas variáveis inferidas como Variant.
+- Falha comprovada: `SCRIPT ERROR: Parse Error: Cannot infer the type of "before" variable...` e o mesmo para `after_valid`.
+- Correção mínima em `game/tests/bootstrap_smoke_runner.gd`: `before` e `after_valid` passaram a declarar explicitamente `Vector2`.
+- Nenhuma alteração no MatchRuntime, MatchCommand, MobileInput, prototype, RunnerExit, watchdog ou workflow CI foi necessária.
 
-#### CI validation trigger
-- Commit documental de auditoria criado somente para disparar o workflow existente via `push`; nenhuma implementação A2.2, RunnerExit, watchdog ou workflow foi alterada.
-- A execução resultante será considerada a evidência de validação apenas se todos os critérios A2.2 forem comprovados nos jobs e logs.
-- Este commit é exclusivo para o gatilho `pull_request`; o código funcional permanece byte-a-byte equivalente ao HEAD `280e762d…`.
+#### Evidência CI de fechamento
+- **CI #176 / Run ID `35408187321`**.
+- Commit testado: `c901f0e8e420a6d60d4943c4efd1a7594eea4f89`.
+- Job `validate`: **SUCCESS** — `npm install`, `npm test`, `npm run typecheck`, `npm run lint`, `npm run build`.
+- Job `godot`: **SUCCESS**.
+- Contratos comprovados em sequência:
+  - Runner Exit
+  - Engine Contracts
+  - Card Data
+  - Card Runtime
+  - Card Guards
+  - Content Foundation
+  - Expansion Scale
+  - Forge War Foundation
+  - A1 Runtime
+  - Bootstrap Smoke
+- Marcadores relevantes:
+  - `RUNNER_EXIT_CONTRACT pass_exit=0 expected=0 fail_exit=1 expected=1`
+  - `ARENA_FORGE_ENGINE_CONTRACTS_OK`
+  - `ARENA_FORGE_CARD_DATA_OK cards=16`
+  - `ARENA_FORGE_CARD_RUNTIME_OK cards=16`
+  - `ARENA_FORGE_CARD_GUARDS_OK invalid=2 cooldown=5`
+  - `ARENA_FORGE_CONTENT_FOUNDATION_OK cards=16 validated heroes=4 fixtures arenas=15 launch cards>=25 heroes>=8`
+  - `ARENA_FORGE_CONTENT_EXPANSION_SCALE_OK card=26 hero=9 arena=16 war_arena=2 forge=2 forge_war=100`
+  - `ARENA_FORGE_FORGE_WAR_FOUNDATION_OK forge=contract war=contract arena=contract rulesets=contract season=contract analytics=9`
+  - `ARENA_FORGE_A1_RUNTIME_OK lifecycle=4 phases events=2 cataclysm=progressive roles=5 combat=xp rewards=result`
+  - `ARENA_FORGE_A2_2_COMMAND_BOUNDARY_OK input=command runtime=authority invalid=rejected state=runtime-owned`
+  - `ARENA_FORGE_BOOTSTRAP_SMOKE_OK main_scene=instantiated runtime=owned`
+- O log final do Godot não apresentou `SCRIPT ERROR`, `A1 FAILURE`, timeout ou cancelamento. O texto `ARENA_FORGE_RUNNER_EXIT_EXPECTED_FAILURE` pertence ao caso negativo deliberadamente exercitado pelo contrato Runner Exit e não constitui falha do job.
+- Auditoria final do diff contra o último ponto validado A2.1 `84f275b3dc592fdcdd787a1e8cdff80b5ae34206`: somente Roadmap + os cinco arquivos funcionais/teste de A2.2 foram alterados; a correção adicionou apenas tipagem explícita no runner.
+- Merge final após validação: `2c1db378fcb7811063e69d91b88f211bf107b6af`.
 
 #### Estado formal
-**A2.2: IMPLEMENTED / VALIDATION PENDING.**
+**A2.2: VALIDATED.**
 
-A2 geral permanece **NÃO VALIDADO**. A2.3 não foi iniciada.
+A2 geral permanece **NÃO VALIDADO**. A2.3 permanece **NÃO INICIADA**.
 
 ## Ordem arquitetural por dependência
 
