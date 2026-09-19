@@ -193,7 +193,12 @@ func _run_read_boundary_contract(instance, failures: Array[String]) -> void:
     ]
     for pattern in forbidden_reads:
         _check(not draw_source.contains(pattern), "presentation draw must not read mutable battle state directly with '%s'" % pattern, failures)
-    _check(draw_source.contains("match_runtime.read_snapshot("), "presentation draw must read through MatchRuntime snapshot", failures)
+    _check(draw_source.contains("_read_presentation_snapshot()"), "presentation draw must use the snapshot adapter", failures)
+    var adapter_start := source_text.find("func _read_presentation_snapshot() -> MatchReadSnapshot")
+    _check(adapter_start >= 0, "prototype must expose a snapshot adapter", failures)
+    if adapter_start >= 0:
+        var adapter_source := source_text.substr(adapter_start)
+        _check(adapter_source.contains("match_runtime.read_snapshot("), "snapshot adapter must read through MatchRuntime", failures)
 
     if failures.is_empty():
         print("ARENA_FORGE_A2_5_READ_BOUNDARY_OK presentation=snapshot runtime=reader mutable_copy=blocked")
