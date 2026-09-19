@@ -37,12 +37,12 @@ func _init(source: MatchRuntime, presentation_energy: float, card_hand: Array, p
     _telegraph_remaining = source.telegraph.remaining
     _enemy_positions = []
     _enemy_alive = []
-    for enemy in source.enemies:
+    for enemy: ArenaEnemy in source.enemies:
         _enemy_positions.append(enemy.position)
         _enemy_alive.append(not enemy.dead)
     _card_names = []
     _card_costs = []
-    for card in card_hand:
+    for card: ArenaCard in card_hand:
         _card_names.append(str(card.card_name))
         _card_costs.append(int(card.energy_cost))
     _pending_upgrade = presentation_pending_upgrade
