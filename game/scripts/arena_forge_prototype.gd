@@ -203,12 +203,20 @@ func _cataclysm_damage() -> void:
             if e.take_damage(10): kills += 1
 
 func _draw() -> void:
+    var snapshot: MatchReadSnapshot = _read_presentation_snapshot()
     draw_rect(Rect2(40, 40, 1200, 640), Color("10131a"), true)
-    draw_circle(hero.position, 24, Color("40c8ff"))
-    for e in enemies:
-        if not e.dead: draw_circle(e.position, 17, Color("ff5c4d"))
+    draw_circle(snapshot.hero_position(), 24, Color("40c8ff"))
+    var enemy_positions := snapshot.enemy_positions()
+    var enemy_alive := snapshot.enemy_alive()
+    for i in range(enemy_positions.size()):
+        if enemy_alive[i]: draw_circle(enemy_positions[i], 17, Color("ff5c4d"))
     draw_string(ThemeDB.fallback_font, Vector2(60, 72), "ARENA FORGE", HORIZONTAL_ALIGNMENT_LEFT, -1, 26)
-    draw_string(ThemeDB.fallback_font, Vector2(60, 105), "%s  |  %.1fs  |  HP %.0f  |  Energy %.0f  |  LV %d  |  Kills %d" % [MatchState.Phase.keys()[match_state.phase], match_state.elapsed, hero.hp, energy.current, progression.level, kills], HORIZONTAL_ALIGNMENT_LEFT, -1, 18)
-    if telegraph.active: draw_string(ThemeDB.fallback_font, Vector2(60, 140), "TELEGRAPH: %s  %.1fs" % [telegraph.id, telegraph.remaining], HORIZONTAL_ALIGNMENT_LEFT, -1, 20)
-    for i in range(deck.hand.size()): draw_string(ThemeDB.fallback_font, Vector2(560 + i * 170, 650), "%d %s (%dE)" % [i + 1, deck.hand[i].card_name, deck.hand[i].energy_cost], HORIZONTAL_ALIGNMENT_LEFT, 160, 16)
-    if pending_upgrade: draw_string(ThemeDB.fallback_font, Vector2(420, 200), "ESCOLHA UMA MELHORIA: 1  2  3", HORIZONTAL_ALIGNMENT_LEFT, -1, 26)
+    draw_string(ThemeDB.fallback_font, Vector2(60, 105), "%s  |  %.1fs  |  HP %.0f  |  Energy %.0f  |  LV %d  |  Kills %d" % [MatchState.Phase.keys()[snapshot.phase()], snapshot.elapsed(), snapshot.hero_hp(), snapshot.energy(), snapshot.level(), snapshot.kills()], HORIZONTAL_ALIGNMENT_LEFT, -1, 18)
+    if snapshot.telegraph_active(): draw_string(ThemeDB.fallback_font, Vector2(60, 140), "TELEGRAPH: %s  %.1fs" % [snapshot.telegraph_id(), snapshot.telegraph_remaining()], HORIZONTAL_ALIGNMENT_LEFT, -1, 20)
+    var card_names := snapshot.card_names()
+    var card_costs := snapshot.card_costs()
+    for i in range(card_names.size()): draw_string(ThemeDB.fallback_font, Vector2(560 + i * 170, 650), "%d %s (%dE)" % [i + 1, card_names[i], card_costs[i]], HORIZONTAL_ALIGNMENT_LEFT, 160, 16)
+    if snapshot.pending_upgrade(): draw_string(ThemeDB.fallback_font, Vector2(420, 200), "ESCOLHA UMA MELHORIA: 1  2  3", HORIZONTAL_ALIGNMENT_LEFT, -1, 26)
+
+func _read_presentation_snapshot() -> MatchReadSnapshot:
+    return match_runtime.read_snapshot(energy.current, deck.hand, pending_upgrade)

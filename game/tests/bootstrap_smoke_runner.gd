@@ -34,6 +34,7 @@ func _init() -> void:
     _run_command_boundary_contract(instance, failures)
     _run_mutation_rules_contract(instance, failures)
     _run_extended_command_boundary_contract(instance, failures)
+    _run_read_boundary_contract(instance, failures)
 
     var prototype_source := FileAccess.open("res://scripts/arena_forge_prototype.gd", FileAccess.READ)
     if prototype_source == null:
@@ -145,6 +146,62 @@ func _run_mutation_rules_contract(instance, failures: Array[String]) -> void:
 
     if failures.size() == before_failures:
         print("ARENA_FORGE_A2_3_MUTATION_RULES_OK authority=runtime bypass=blocked movement=command-only")
+
+
+func _run_read_boundary_contract(instance, failures: Array[String]) -> void:
+    var snapshot: MatchReadSnapshot = instance.match_runtime.read_snapshot(instance.energy.current, instance.deck.hand, instance.pending_upgrade)
+    _check(snapshot != null, "MatchRuntime must expose a presentation read snapshot", failures)
+    _check(snapshot.hero_position() == instance.match_runtime.hero.position, "snapshot must expose current Runtime hero position", failures)
+    _check(is_equal_approx(snapshot.hero_hp(), instance.match_runtime.hero.hp), "snapshot must expose current Runtime hero hp", failures)
+    _check(snapshot.level() == instance.match_runtime.progression.level, "snapshot must expose current Runtime progression level", failures)
+    _check(snapshot.kills() == instance.match_runtime.kills, "snapshot must expose current Runtime kill count", failures)
+    _check(snapshot.enemy_positions().size() == instance.match_runtime.enemies.size(), "snapshot must expose enemy presentation positions", failures)
+
+    var frozen_position: Vector2 = snapshot.hero_position()
+    var move_command := MatchCommand.move(Vector2(1.0, 0.0))
+    _check(instance.match_runtime.submit_command(move_command, 0.1), "Runtime must still accept movement while snapshot is read-only", failures)
+    _check(snapshot.hero_position() == frozen_position, "existing snapshot must not change after Runtime mutation", failures)
+
+    var fresh_snapshot: MatchReadSnapshot = instance.match_runtime.read_snapshot(instance.energy.current, instance.deck.hand, instance.pending_upgrade)
+    _check(fresh_snapshot.hero_position() != frozen_position, "fresh snapshot must reflect Runtime mutation", failures)
+
+    var prototype_source := FileAccess.open("res://scripts/arena_forge_prototype.gd", FileAccess.READ)
+    if prototype_source == null:
+        failures.append("prototype source must be readable for read-boundary guard")
+        return
+    var source_text := prototype_source.get_as_text()
+    var draw_start := source_text.find("func _draw() -> void:")
+    _check(draw_start >= 0, "prototype must contain presentation draw function", failures)
+    if draw_start < 0:
+        return
+    var draw_end := source_text.find("func _read_presentation_snapshot() -> MatchReadSnapshot", draw_start)
+    _check(draw_end > draw_start, "prototype must isolate snapshot adapter from presentation draw", failures)
+    var draw_source := source_text.substr(draw_start, draw_end - draw_start)
+    var forbidden_reads := [
+        "hero.position",
+        "hero.hp",
+        "match_state.",
+        "progression.level",
+        "kills =",
+        "kills +=",
+        "telegraph.active",
+        "telegraph.id",
+        "telegraph.remaining",
+        "energy.current",
+        "deck.hand",
+        "pending_upgrade ="
+    ]
+    for pattern in forbidden_reads:
+        _check(not draw_source.contains(pattern), "presentation draw must not read mutable battle state directly with '%s'" % pattern, failures)
+    _check(draw_source.contains("_read_presentation_snapshot()"), "presentation draw must use the snapshot adapter", failures)
+    var adapter_start := source_text.find("func _read_presentation_snapshot() -> MatchReadSnapshot")
+    _check(adapter_start >= 0, "prototype must expose a snapshot adapter", failures)
+    if adapter_start >= 0:
+        var adapter_source := source_text.substr(adapter_start)
+        _check(adapter_source.contains("match_runtime.read_snapshot("), "snapshot adapter must read through MatchRuntime", failures)
+
+    if failures.is_empty():
+        print("ARENA_FORGE_A2_5_READ_BOUNDARY_OK presentation=snapshot runtime=reader mutable_copy=blocked")
 
 func _check(condition: bool, message: String, failures: Array[String]) -> void:
     if not condition:

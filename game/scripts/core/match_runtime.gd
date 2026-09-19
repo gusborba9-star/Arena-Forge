@@ -131,5 +131,8 @@ func deal_damage(enemy: ArenaEnemy, amount: float, direction := Vector2.ZERO, kn
         progression.add_xp(10)
     return killed
 
+func read_snapshot(presentation_energy: float, card_hand: Array, pending_upgrade: bool) -> MatchReadSnapshot:
+    return MatchReadSnapshot.new(self, presentation_energy, card_hand, pending_upgrade)
+
 func result() -> Dictionary:
     return rewards.duplicate(true)
