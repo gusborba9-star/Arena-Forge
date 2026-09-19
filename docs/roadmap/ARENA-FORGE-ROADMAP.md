@@ -497,6 +497,10 @@ O `game/tests/bootstrap_smoke_runner.gd` agora verifica:
 - Godot local não está disponível nesta sessão; não foi alegado teste local.
 - Nenhuma execução CI foi localizada para o HEAD `aa8838ce6771edf0608c2901e7f960779437eea5` até este registro.
 
+#### CI validation trigger
+- Commit documental de auditoria criado somente para disparar o workflow existente via `push`; nenhuma implementação A2.2, RunnerExit, watchdog ou workflow foi alterada.
+- A execução resultante será considerada a evidência de validação apenas se todos os critérios A2.2 forem comprovados nos jobs e logs.
+
 #### Estado formal
 **A2.2: IMPLEMENTED / VALIDATION PENDING.**
 
