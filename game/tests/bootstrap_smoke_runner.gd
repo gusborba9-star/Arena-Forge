@@ -29,6 +29,7 @@ func _init() -> void:
     _check(instance.match_runtime.arena.width == 12 and instance.match_runtime.arena.height == 7, "MatchRuntime arena state must be initialized", failures)
 
     _run_command_boundary_contract(instance, failures)
+    _run_mutation_rules_contract(instance, failures)
 
     var prototype_source := FileAccess.open("res://scripts/arena_forge_prototype.gd", FileAccess.READ)
     if prototype_source == null:
@@ -76,6 +77,32 @@ func _run_command_boundary_contract(instance, failures: Array[String]) -> void:
     _check(not source_text.contains("hero.position.y = clampf"), "prototype must not clamp runtime hero state directly", failures)
 
     print("ARENA_FORGE_A2_2_COMMAND_BOUNDARY_OK input=command runtime=authority invalid=rejected state=runtime-owned")
+
+func _run_mutation_rules_contract(instance, failures: Array[String]) -> void:
+    var prototype_source := FileAccess.open("res://scripts/arena_forge_prototype.gd", FileAccess.READ)
+    if prototype_source == null:
+        failures.append("prototype source must be readable for mutation-rules guard")
+        return
+
+    var source_text := prototype_source.get_as_text()
+    var forbidden_patterns := [
+        "hero.move(",
+        "hero.position =",
+        "hero.position +=",
+        "hero.position -=",
+        "hero.position.x =",
+        "hero.position.y =",
+        "hero.set_position("
+    ]
+    var before_failures := failures.size()
+    for pattern in forbidden_patterns:
+        _check(not source_text.contains(pattern), "prototype must not bypass Runtime mutation authority with '%s'" % pattern, failures)
+
+    _check(instance.match_runtime.hero == instance.hero, "Runtime must remain the owner of the executable hero", failures)
+    _check(instance.match_runtime != null, "executable flow must expose exactly one MatchRuntime owner", failures)
+
+    if failures.size() == before_failures:
+        print("ARENA_FORGE_A2_3_MUTATION_RULES_OK authority=runtime bypass=blocked movement=command-only")
 
 func _check(condition: bool, message: String, failures: Array[String]) -> void:
     if not condition:
