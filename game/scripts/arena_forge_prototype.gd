@@ -57,7 +57,6 @@ func _ready() -> void:
     progression = match_runtime.progression
     enemies = match_runtime.enemies
     hero.configure(HeroDefinitions.initial()[2])
-    hero.position = Vector2(640, 360)
     base_speed = hero.speed
     var cards: Array[ArenaCard] = []
     var deck_size := int(runtime_config.get("deck", {}).get("size", 8))
