@@ -610,7 +610,62 @@ Ampliar a fronteira explícita de comandos além do movimento, fazendo Input/Pre
 #### Estado formal
 **A2.4: VALIDATED.**
 
-A2 geral permanece **NÃO VALIDADO**. A2.5 permanece **NÃO INICIADA**.
+A2 geral permanece **NÃO VALIDADO**. A2.5 está **VALIDATED**. A2.6 permanece **NÃO INICIADA**.
+
+### A2.5 — Read Boundary — 2026-09-19
+
+#### Auditoria inicial e objetivo
+A2.4 já estava VALIDATED. O contrato seguinte no Roadmap é A2.5 Read Boundary: Presentation deve ler snapshots/estado exposto pelo MatchRuntime e não manter cópias mutáveis do estado de batalha. A2.6 Card Boundary não foi antecipada.
+
+#### Escopo mínimo
+- Expor pelo MatchRuntime um snapshot de leitura da partida.
+- Encapsular os valores necessários à apresentação em MatchReadSnapshot.
+- Fazer o _draw() do Prototype consumir o snapshot, sem acessar diretamente o estado mutável do Runtime.
+- Preservar a execução legada de cards/upgrades e todos os contratos anteriores.
+
+#### Implementação
+- Adicionado game/scripts/core/match_read_snapshot.gd.
+- game/scripts/core/match_runtime.gd: adicionado read_snapshot(...), retornando MatchReadSnapshot.
+- game/scripts/arena_forge_prototype.gd: apresentação passou a usar _read_presentation_snapshot() e o snapshot para renderização.
+- game/tests/bootstrap_smoke_runner.gd: contrato positivo de snapshot, estabilidade do snapshot após mutação posterior do Runtime e guard estrutural contra leituras diretas no _draw().
+- Coleções expostas pelo snapshot são devolvidas como cópias; não há setters de estado no snapshot.
+
+#### Contrato e marcador
+ARENA_FORGE_A2_5_READ_BOUNDARY_OK presentation=snapshot runtime=reader mutable_copy=blocked
+
+#### Validação
+- CI #202 / Run ID 35453365606 — validate=SUCCESS, godot=FAILURE. Causa: inferência de tipo ausente nas variáveis do teste A2.5. Correção mínima aplicada.
+- CI #204 / Run ID 35453444543 — validate=SUCCESS, godot=FAILURE. Causa: guard estrutural incluía o trecho do adapter e interpretava nomes de getters como acesso direto. Correção mínima no teste.
+- CI #207 / Run ID 35453525636 — validate=SUCCESS, godot=FAILURE. Causa: guard ainda confundia snapshot.kills()/snapshot.pending_upgrade() com acesso direto. Correção mínima no teste.
+- CI #209 / Run ID 35453630394 — validate=SUCCESS, godot=FAILURE. Causa: o guard exigia match_runtime.read_snapshot() diretamente dentro de _draw(), embora o contrato estivesse corretamente encapsulado no adapter. Correção mínima no teste.
+- CI #211 / Run ID 35453704199 — terminal SUCCESS.
+- validate=SUCCESS e godot=SUCCESS.
+- Todos os contratos anteriores executados com sucesso.
+- ARENA_FORGE_A2_2_COMMAND_BOUNDARY_OK.
+- ARENA_FORGE_A2_3_MUTATION_RULES_OK.
+- ARENA_FORGE_A2_4_COMMAND_BOUNDARY_OK.
+- ARENA_FORGE_A2_5_READ_BOUNDARY_OK presentation=snapshot runtime=reader mutable_copy=blocked.
+- ARENA_FORGE_A1_RUNTIME_OK.
+- ARENA_FORGE_BOOTSTRAP_SMOKE_OK.
+- Runner Exit esperado permaneceu limitado ao caso negativo deliberado: fail_exit=1 expected=1.
+- Sem SCRIPT ERROR, A1 FAILURE, timeout, cancelamento ou exit inesperado no fechamento.
+
+#### Auditoria final e merge
+- Diff contra main antes do PR: somente quatro arquivos A2.5 foram alterados:
+  - game/scripts/arena_forge_prototype.gd
+  - game/scripts/core/match_read_snapshot.gd
+  - game/scripts/core/match_runtime.gd
+  - game/tests/bootstrap_smoke_runner.gd
+- PR #5: feat(a2.5): enforce read boundary.
+- SHA validado: f749787d037676afdf9fd5add9efca607ad03963.
+- Merge SHA: d091b6620672ebcbc76dd7342c1043b9baabdc7e.
+- Nenhuma alteração em workflow, Runner Exit, watchdog, A1, Expansion Scale, Forge War Foundation ou infraestrutura.
+- Nenhum escopo A2.6+ foi introduzido.
+
+#### Estado formal
+**A2.5: VALIDATED.**
+
+A2 geral permanece **NÃO VALIDADO**. A2.6 permanece **NÃO INICIADA**.
 
 
 ## Ordem arquitetural por dependência
