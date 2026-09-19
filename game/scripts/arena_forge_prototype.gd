@@ -203,7 +203,7 @@ func _cataclysm_damage() -> void:
             if e.take_damage(10): kills += 1
 
 func _draw() -> void:
-    var snapshot := match_runtime.read_snapshot(energy.current, deck.hand, pending_upgrade)
+    var snapshot: MatchReadSnapshot = _read_presentation_snapshot()
     draw_rect(Rect2(40, 40, 1200, 640), Color("10131a"), true)
     draw_circle(snapshot.hero_position(), 24, Color("40c8ff"))
     var enemy_positions := snapshot.enemy_positions()
@@ -217,3 +217,6 @@ func _draw() -> void:
     var card_costs := snapshot.card_costs()
     for i in range(card_names.size()): draw_string(ThemeDB.fallback_font, Vector2(560 + i * 170, 650), "%d %s (%dE)" % [i + 1, card_names[i], card_costs[i]], HORIZONTAL_ALIGNMENT_LEFT, 160, 16)
     if snapshot.pending_upgrade(): draw_string(ThemeDB.fallback_font, Vector2(420, 200), "ESCOLHA UMA MELHORIA: 1  2  3", HORIZONTAL_ALIGNMENT_LEFT, -1, 26)
+
+func _read_presentation_snapshot() -> MatchReadSnapshot:
+    return match_runtime.read_snapshot(energy.current, deck.hand, pending_upgrade)
