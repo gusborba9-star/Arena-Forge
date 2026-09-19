@@ -149,7 +149,7 @@ func _run_mutation_rules_contract(instance, failures: Array[String]) -> void:
 
 
 func _run_read_boundary_contract(instance, failures: Array[String]) -> void:
-    var snapshot := instance.match_runtime.read_snapshot(instance.energy.current, instance.deck.hand, instance.pending_upgrade)
+    var snapshot: MatchReadSnapshot = instance.match_runtime.read_snapshot(instance.energy.current, instance.deck.hand, instance.pending_upgrade)
     _check(snapshot != null, "MatchRuntime must expose a presentation read snapshot", failures)
     _check(snapshot.hero_position() == instance.match_runtime.hero.position, "snapshot must expose current Runtime hero position", failures)
     _check(is_equal_approx(snapshot.hero_hp(), instance.match_runtime.hero.hp), "snapshot must expose current Runtime hero hp", failures)
@@ -157,12 +157,12 @@ func _run_read_boundary_contract(instance, failures: Array[String]) -> void:
     _check(snapshot.kills() == instance.match_runtime.kills, "snapshot must expose current Runtime kill count", failures)
     _check(snapshot.enemy_positions().size() == instance.match_runtime.enemies.size(), "snapshot must expose enemy presentation positions", failures)
 
-    var frozen_position := snapshot.hero_position()
+    var frozen_position: Vector2 = snapshot.hero_position()
     var move_command := MatchCommand.move(Vector2(1.0, 0.0))
     _check(instance.match_runtime.submit_command(move_command, 0.1), "Runtime must still accept movement while snapshot is read-only", failures)
     _check(snapshot.hero_position() == frozen_position, "existing snapshot must not change after Runtime mutation", failures)
 
-    var fresh_snapshot := instance.match_runtime.read_snapshot(instance.energy.current, instance.deck.hand, instance.pending_upgrade)
+    var fresh_snapshot: MatchReadSnapshot = instance.match_runtime.read_snapshot(instance.energy.current, instance.deck.hand, instance.pending_upgrade)
     _check(fresh_snapshot.hero_position() != frozen_position, "fresh snapshot must reflect Runtime mutation", failures)
 
     var prototype_source := FileAccess.open("res://scripts/arena_forge_prototype.gd", FileAccess.READ)
