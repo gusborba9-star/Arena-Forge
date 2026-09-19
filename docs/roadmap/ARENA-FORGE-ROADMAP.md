@@ -588,22 +588,27 @@ A2 geral permanece **NÃO VALIDADO**. A2.4 permanece **NÃO INICIADA**.
 Ampliar a fronteira explícita de comandos além do movimento, fazendo Input/Presentation traduzir intenção de carta e upgrade em comandos consumidos pelo MatchRuntime, sem antecipar a migração de execução de cards/upgrades para o domínio Runtime.
 
 #### Implementação
-- `MatchCommand` agora possui `MOVE`, `PLAY_CARD` e `SELECT_UPGRADE`, com índices explícitos para carta/upgrade.
-- `MatchRuntime.submit_command()` valida e consome os novos comandos; comandos válidos de carta/upgrade são encaminhados por sinais de domínio para a execução legada existente.
-- `arena_forge_prototype.gd` deixou de chamar diretamente `_play_card()` e `_select_upgrade()` a partir do input; o input produz comandos e o Runtime os consome.
+- `MatchCommand` passou a representar `MOVE`, `PLAY_CARD` e `SELECT_UPGRADE`.
+- `MatchRuntime.submit_command()` valida e consome os três tipos; comandos de carta/upgrade válidos emitem solicitações de domínio para a execução legada existente.
+- O input do prototype não chama mais diretamente `_play_card()` ou `_select_upgrade()`; produz comandos e os entrega ao Runtime.
 - A execução interna legada de cards/upgrades permanece fora do Runtime por decisão de escopo; sua migração pertence às etapas posteriores de A2.
-- Não foram alterados A1, Runner Exit, watchdog, workflow, infraestrutura, combate, eventos, progressão, rewards ou UI de produção.
+- Nenhuma alteração em A1, Runner Exit, watchdog, workflow, infraestrutura, combate, eventos, progressão, rewards ou UI de produção.
 
-#### Contrato de teste
-- MOVE continua passando por `MatchCommand → MatchRuntime`.
-- `PLAY_CARD` válido é aceito pelo Runtime e gera solicitação autorizada.
-- `SELECT_UPGRADE` válido é aceito pelo Runtime e gera solicitação autorizada.
-- índices negativos são rejeitados sem emissão.
-- Input contém criação dos novos comandos e não possui chamadas diretas `_play_card()`/`_select_upgrade()`.
-- Marcador previsto: `ARENA_FORGE_A2_4_COMMAND_BOUNDARY_OK commands=move,play_card,select_upgrade runtime=consumer invalid=rejected`.
+#### Validação
+- **CI #193 / Run ID `35452933503`**.
+- SHA do PR: `a4d62360b8b96762558bdd9e6367db3c9acd5679`.
+- `validate=SUCCESS`.
+- `godot=SUCCESS`.
+- Godot executou Runner Exit, Engine, Card Data, Card Runtime, Card Guards, Content Foundation, Expansion Scale, Forge War Foundation, A1 Runtime e Bootstrap Smoke sem falha.
+- Marcador A2.4: `ARENA_FORGE_A2_4_COMMAND_BOUNDARY_OK commands=move,play_card,select_upgrade runtime=consumer invalid=rejected`.
+- Regressões preservadas: `ARENA_FORGE_A2_2_COMMAND_BOUNDARY_OK`, `ARENA_FORGE_A2_3_MUTATION_RULES_OK`, `ARENA_FORGE_A1_RUNTIME_OK` e `ARENA_FORGE_BOOTSTRAP_SMOKE_OK`.
+- O único erro textual do log foi `ARENA_FORGE_RUNNER_EXIT_EXPECTED_FAILURE`, pertencente ao caso negativo deliberado do contrato Runner Exit; `RUNNER_EXIT_CONTRACT` confirmou `pass_exit=0 expected=0 fail_exit=1 expected=1`.
+- Auditoria do PR: cinco arquivos alterados, sem workflow/infraestrutura/A1/RunnerExit/watchdog; nenhum escopo A2.5+ introduzido.
+- PR #3 integrado após CI verde.
+- Merge SHA: `f33011c9fd681545670ebb7cebf2453027803635`.
 
-#### Estado provisório
-**A2.4: IMPLEMENTED / VALIDATION PENDING.**
+#### Estado formal
+**A2.4: VALIDATED.**
 
 A2 geral permanece **NÃO VALIDADO**. A2.5 permanece **NÃO INICIADA**.
 
