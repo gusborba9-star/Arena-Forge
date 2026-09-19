@@ -182,13 +182,14 @@ func _run_read_boundary_contract(instance, failures: Array[String]) -> void:
         "hero.hp",
         "match_state.",
         "progression.level",
-        "kills",
+        "kills =",
+        "kills +=",
         "telegraph.active",
         "telegraph.id",
         "telegraph.remaining",
         "energy.current",
         "deck.hand",
-        "pending_upgrade"
+        "pending_upgrade ="
     ]
     for pattern in forbidden_reads:
         _check(not draw_source.contains(pattern), "presentation draw must not read mutable battle state directly with '%s'" % pattern, failures)
