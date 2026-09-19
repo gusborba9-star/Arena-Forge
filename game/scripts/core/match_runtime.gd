@@ -26,7 +26,7 @@ func configure(arena_definition: Dictionary, control_end := 90.0, cataclysm_star
     arena = ArenaState.new()
     telegraph = Telegraph.new()
     hero = ArenaHero.new()
-    hero.position = Vector2.ZERO
+    hero.position = Vector2(640, 360)
     enemies.clear()
     pending_event.clear()
     kills = 0
