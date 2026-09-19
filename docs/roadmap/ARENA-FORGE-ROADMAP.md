@@ -531,7 +531,56 @@ O `game/tests/bootstrap_smoke_runner.gd` verifica:
 #### Estado formal
 **A2.2: VALIDATED.**
 
-A2 geral permanece **NÃO VALIDADO**. A2.3 permanece **NÃO INICIADA**.
+A2 geral permanece **NÃO VALIDADO**. A2.3 está **VALIDATED**. A2.4 permanece **NÃO INICIADA**.
+
+### A2.3 — Mutation Rules — 2026-09-19
+
+#### Objetivo
+Fechar a primeira camada verificável de regras de mutação: Presentation/Input produz comandos e o MatchRuntime permanece como autoridade para mutações do estado do hero. Nesta etapa não foram migrados energia, deck/CardRuntime, cards, upgrades, eventos, combate, progressão, rewards ou timers.
+
+#### Implementação
+- game/scripts/core/match_runtime.gd: a posição inicial do hero passou a ser configurada pelo próprio Runtime durante configure(), reforçando ownership desde a inicialização.
+- game/scripts/arena_forge_prototype.gd: removida a mutação direta hero.position = ...; movimento continua chegando ao Runtime via submit_command().
+- game/tests/bootstrap_smoke_runner.gd: adicionado contrato negativo de mutação que verifica que o prototype não chama hero.move(), não escreve diretamente hero.position e mantém match_runtime.hero == hero.
+- A2.2 foi preservada sem reabrir sua implementação.
+- Runner Exit, watchdog, workflow CI, A1 e contratos anteriores não foram alterados.
+
+#### Correção durante validação
+- CI #182 / Run ID 35408697030: validate=SUCCESS, mas godot=FAILURE no Bootstrap Smoke.
+- Causa comprovada pelo log: o prototype ainda continha hero.position = Vector2(640, 360), exatamente a mutação que A2.3 deveria impedir.
+- Correção mínima: remoção dessa linha do prototype; a posição inicial já estava centralizada em MatchRuntime.configure().
+- Commit de correção: 945b721d58ba39ee6b7d7f03df47cccc4bf43b56.
+- Nenhuma alteração de workflow ou infraestrutura foi necessária.
+
+#### Evidência CI de fechamento
+- CI #184 / Run ID 35408934765.
+- SHA validado: 945b721d58ba39ee6b7d7f03df47cccc4bf43b56.
+- Jobs: validate=SUCCESS, godot=SUCCESS.
+- validate: npm install, npm test, npm run typecheck, npm run lint, npm run build concluídos com SUCCESS.
+- Godot executou em sequência Runner Exit, Engine, Card Data, Card Runtime, Card Guards, Content Foundation, Expansion Scale, Forge War Foundation, A1 Runtime e Bootstrap Smoke com SUCCESS.
+- Marcadores:
+  - ARENA_FORGE_RUNNER_EXIT_PASS_OK
+  - RUNNER_EXIT_CONTRACT pass_exit=0 expected=0 fail_exit=1 expected=1
+  - ARENA_FORGE_ENGINE_CONTRACTS_OK
+  - ARENA_FORGE_CARD_DATA_OK cards=16
+  - ARENA_FORGE_CARD_RUNTIME_OK cards=16
+  - ARENA_FORGE_CARD_GUARDS_OK invalid=2 cooldown=5
+  - ARENA_FORGE_CONTENT_FOUNDATION_OK cards=16 validated heroes=4 fixtures arenas=15 launch cards>=25 heroes>=8
+  - ARENA_FORGE_CONTENT_EXPANSION_SCALE_OK card=26 hero=9 arena=16 war_arena=2 forge=2 forge_war=100
+  - ARENA_FORGE_FORGE_WAR_FOUNDATION_OK forge=contract war=contract arena=contract rulesets=contract season=contract analytics=9
+  - ARENA_FORGE_A1_RUNTIME_OK lifecycle=4 phases events=2 cataclysm=progressive roles=5 combat=xp rewards=result
+  - ARENA_FORGE_A2_2_COMMAND_BOUNDARY_OK input=command runtime=authority invalid=rejected state=runtime-owned
+  - ARENA_FORGE_A2_3_MUTATION_RULES_OK authority=runtime bypass=blocked movement=command-only
+  - ARENA_FORGE_BOOTSTRAP_SMOKE_OK main_scene=instantiated runtime=owned
+- O log final do Godot não apresentou SCRIPT ERROR, A1 FAILURE, timeout, cancelamento ou exit inesperado. ARENA_FORGE_RUNNER_EXIT_EXPECTED_FAILURE ocorreu somente no microteste negativo esperado e foi tratado com fail_exit=1 expected=1.
+- Auditoria final do diff contra o baseline A2.2 e96020cdbcb2d973d251325db030d51ccb6b9fd7: somente game/scripts/arena_forge_prototype.gd, game/scripts/core/match_runtime.gd e game/tests/bootstrap_smoke_runner.gd foram alterados; 3 commits, sem alteração de workflow, RunnerExit, watchdog, A1 ou infraestrutura.
+- Merge do PR #2 após CI verde: c85e30f56a0e127b0af2d65a78d73696f9b483db.
+
+#### Estado formal
+**A2.3: VALIDATED.**
+
+A2 geral permanece **NÃO VALIDADO**. A2.4 permanece **NÃO INICIADA**.
+
 
 ## Ordem arquitetural por dependência
 
